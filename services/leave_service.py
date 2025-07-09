@@ -3,6 +3,7 @@ import json
 
 import discord
 
+from config import LEAVE_TYPE_MAP, PARTIAL_LEAVE_MAP
 from repositories.leave_repository import LeaveRepository
 from services.gemini_service import GeminiService
 from utils.datetime_utils import get_datetime_now
@@ -52,18 +53,6 @@ class LeaveService:
             color=discord.Color.blue(),
         )
 
-        leave_type_map = {
-            "annual_leave": "ลาพักร้อน",
-            "sick_leave": "ลาป่วย",
-            "personal_leave": "ลากิจ",
-            "birthday_leave": "ลาวันเกิด",
-        }
-
-        partial_leave_map = {
-            "afternoon": "ครึ่งบ่าย",
-            "morning": "ครึ่งเช้า",
-        }
-
         if not team_leaves:
             embed.description = "ไม่มีพนักงานลาประจำวันนี้"
             return embed
@@ -72,7 +61,7 @@ class LeaveService:
             embed.add_field(
                 name=f"👶 {team_name}" if "trainee" in team_name else f"🏢 {team_name}",
                 value="\n".join(
-                    f"<@{member['author_id']}> - {leave_type_map.get(member['leave_type'])} {partial_leave_map.get(member['partial_leave'], '')}"
+                    f"<@{member['author_id']}> - {LEAVE_TYPE_MAP.get(member['leave_type'])} {PARTIAL_LEAVE_MAP.get(member['partial_leave'], '')}"
                     for member in members
                 ),
                 inline=False,
@@ -80,7 +69,7 @@ class LeaveService:
 
         return embed
 
-    async def track_leave(self, message: discord.Message) -> None:
+    async def track_leave(self, message: discord.Message) -> list:
         gemini_response = await asyncio.to_thread(
             self.gemini_service.analyze_leave_request, message.content
         )
@@ -95,11 +84,7 @@ class LeaveService:
         for leave in response_json.get("leave_request", []):
             absent_date = leave.get("absent_date")
             leave_type = leave.get("leave_type")
-            partial_leave = (
-                leave.get("partial_leave")
-                if leave.get("partial_leave") != "fullday"
-                else None
-            )
+            partial_leave = leave.get("partial_leave")
             content = message.content.strip()
             message_id = str(message.id)
             author_id = str(message.author.id)
@@ -115,3 +100,101 @@ class LeaveService:
                 absent_date=absent_date,
                 created_at=created_at,
             )
+
+        return response_json.get("leave_request", [])
+
+    async def send_leave_confirmation(
+        self, leave_request: list, message: discord.Message
+    ) -> None:
+        if not leave_request:
+            return
+
+        embed_color = discord.Color.from_rgb(52, 152, 219)
+
+        embed = discord.Embed(
+            title="การบันทึกการลาเสร็จสมบูรณ์",
+            description="สรุปรายละเอียดการลาของคุณ:",
+            color=embed_color,
+        )
+
+        for leave in leave_request:
+            leave_type_display = LEAVE_TYPE_MAP.get(leave["leave_type"], "ไม่ระบุประเภท")
+            partial_leave_display = PARTIAL_LEAVE_MAP.get(leave["partial_leave"], "")
+
+            embed.add_field(
+                name=f"🗓️ วันที่: {leave['absent_date']}",
+                value=f"**ประเภท:** {leave_type_display} {partial_leave_display}",
+                inline=False,
+            )
+
+        embed.add_field(
+            name="\n📝 รายละเอียดการลา:",
+            value=f"```\n{message.content}\n```",
+            inline=False,
+        )
+
+        embed.set_footer(
+            text="หากมีปัญหาหรือข้อสงสัย โปรดติดต่อฝ่ายทรัพยากรบุคคล | ขอให้มีความสุขกับการลา!",
+        )
+
+        await message.author.send(embed=embed)
+
+    async def send_leave_deletion_notification(self, message: discord.Message) -> None:
+        embed_color = discord.Color.from_rgb(231, 76, 60)
+
+        embed = discord.Embed(
+            title="การลาถูกลบ",
+            description="ข้อความการลาได้ถูกลบออกจากระบบ",
+            color=embed_color,
+        )
+
+        embed.add_field(
+            name="\n📝 รายละเอียดการลา:",
+            value=f"```\n{message.content}\n```",
+            inline=False,
+        )
+
+        embed.set_footer(text="หากมีปัญหาหรือข้อสงสัย โปรดติดต่อฝ่ายทรัพยากรบุคคล")
+
+        await message.author.send(embed=embed)
+
+    async def delete_leave_by_message_id(self, message_id: int) -> None:
+        response = await self.leave_repository.get_leave_by_message_id(str(message_id))
+        if response:
+            await self.leave_repository.delete_leave_by_message_id(str(message_id))
+
+    async def send_edit_leave_comfirmation(
+        self, leave_request: list, message: discord.Message
+    ) -> None:
+        if not leave_request:
+            return
+
+        embed_color = discord.Color.from_rgb(52, 152, 219)
+
+        embed = discord.Embed(
+            title="การแก้ไขการลาเสร็จสมบูรณ์",
+            description="สรุปรายละเอียดการลาที่ได้รับการแก้ไข:",
+            color=embed_color,
+        )
+
+        for leave in leave_request:
+            leave_type_display = LEAVE_TYPE_MAP.get(leave["leave_type"], "ไม่ระบุประเภท")
+            partial_leave_display = PARTIAL_LEAVE_MAP.get(leave["partial_leave"], "")
+
+            embed.add_field(
+                name=f"🗓️ วันที่: {leave['absent_date']}",
+                value=f"**ประเภท:** {leave_type_display} {partial_leave_display}",
+                inline=False,
+            )
+
+        embed.add_field(
+            name="\n📝 รายละเอียดการลา:",
+            value=f"```\n{message.content}\n```",
+            inline=False,
+        )
+
+        embed.set_footer(
+            text="หากมีปัญหาหรือข้อสงสัย โปรดติดต่อฝ่ายทรัพยากรบุคคล | ขอให้มีความสุขกับการลา!",
+        )
+
+        await message.author.send(embed=embed)

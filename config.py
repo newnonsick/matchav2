@@ -11,3 +11,14 @@ ATTENDANCE_TRAINEE_CHANNEL_ID = int(os.getenv("ATTENDANCE_TRAINEE_CHANNEL_ID", "
 ATTENDANCE_EMPLOYEE_CHANNEL_ID = int(os.getenv("ATTENDANCE_EMPLOYEE_CHANNEL_ID", ""))
 LEAVE_SUMMARY_CHANNEL_ID = int(os.getenv("LEAVE_SUMMARY_CHANNEL_ID", ""))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+
+LEAVE_TYPE_MAP = {
+    "annual_leave": "ลาพักร้อน",
+    "sick_leave": "ลาป่วย",
+    "personal_leave": "ลากิจ",
+    "birthday_leave": "ลาวันเกิด",
+}
+PARTIAL_LEAVE_MAP = {
+    "afternoon": "ครึ่งบ่าย",
+    "morning": "ครึ่งเช้า",
+}

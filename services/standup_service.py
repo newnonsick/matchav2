@@ -2,6 +2,7 @@ import re
 
 import discord
 
+from config import LEAVE_TYPE_MAP, PARTIAL_LEAVE_MAP
 from repositories.standup_repository import StandupRepository
 from utils.datetime_utils import combine_date_with_current_time
 
@@ -53,12 +54,15 @@ class StandupService:
             print(f"Error checking if user is in standup channel: {e}")
             return []
 
-    async def track_standup(self, message: discord.Message) -> None:
-        response = await self.standupRepository.get_standup_by_message_id(message.id)
-        if response:
-            raise ValueError(
-                f"Message with ID {message.id} already exists in the standup database."
+    async def track_standup(self, message: discord.Message, check: bool = True) -> None:
+        if check:
+            response = await self.standupRepository.get_standup_by_message_id(
+                str(message.id)
             )
+            if response:
+                raise ValueError(
+                    f"Message with ID {message.id} already exists in the standup database."
+                )
 
         message_contect = message.content.strip()
         pattern = r"\b\d{2}/\d{2}/\d{4}\b"
@@ -74,7 +78,9 @@ class StandupService:
         author_id = str(message.author.id)
         message_id = str(message.id)
         username = message.author.name
-        user_server_name = message.author.display_name if message.author.display_name else username
+        user_server_name = (
+            message.author.display_name if message.author.display_name else username
+        )
         channel_id = str(message.channel.id)
 
         # content = message_contect.replace(date, "").strip()
@@ -97,25 +103,14 @@ class StandupService:
         channel_id: int,
         date: str,
     ) -> discord.Embed:
-        leave_type_map = {
-            "annual_leave": "ลาพักร้อน",
-            "sick_leave": "ลาป่วย",
-            "personal_leave": "ลากิจ",
-            "birthday_leave": "ลาวันเกิด",
-        }
-
-        partial_leave_map = {
-            "afternoon": "ครึ่งบ่าย",
-            "morning": "ครึ่งเช้า",
-        }
 
         users_inleave_map = {}
         for user_inleave in user_inleaves:
             users_inleave_map[int(user_inleave["author_id"])] = {
-                "leave_type": leave_type_map.get(
+                "leave_type": LEAVE_TYPE_MAP.get(
                     user_inleave["leave_type"], "ไม่ระบุประเภทลา"
                 ),
-                "partial_leave": partial_leave_map.get(
+                "partial_leave": PARTIAL_LEAVE_MAP.get(
                     user_inleave["partial_leave"], ""
                 ),
                 "content": user_inleave["content"],
@@ -160,9 +155,7 @@ class StandupService:
             for inleave_members in inleave_members_split:
                 embed.add_field(
                     name="สถานะการลาวันนี้",
-                    value=(
-                        "\n".join(inleave_members)
-                    ),
+                    value=("\n".join(inleave_members)),
                     inline=False,
                 )
         else:
@@ -197,7 +190,7 @@ class StandupService:
         except Exception as e:
             print(f"Error registering new standup channel {channel_id}: {e}")
             raise ValueError(f"Failed to register new standup channel: {e}")
-        
+
     async def is_user_added_to_standup_channel(
         self, channel_id: int, user_id: int
     ) -> bool:
@@ -207,14 +200,18 @@ class StandupService:
             )
             return bool(response)
         except Exception as e:
-            print(f"Error checking if user {user_id} is added to standup channel {channel_id}: {e}")
+            print(
+                f"Error checking if user {user_id} is added to standup channel {channel_id}: {e}"
+            )
             return False
 
     async def add_member_to_standup_channel(
         self, channel_id: int, user_id: int, user_name: str, created_at: str
     ) -> None:
         if await self.is_user_added_to_standup_channel(channel_id, user_id):
-            raise ValueError(f"User <@{user_id}> is already added to standup channel <#{channel_id}>")
+            raise ValueError(
+                f"User <@{user_id}> is already added to standup channel <#{channel_id}>"
+            )
 
         await self.standupRepository.add_member_to_standup_channel(
             channel_id=channel_id,
@@ -227,9 +224,17 @@ class StandupService:
         self, channel_id: int, user_id: int
     ) -> None:
         if not await self.is_user_added_to_standup_channel(channel_id, user_id):
-            raise ValueError(f"User <@{user_id}> is not in standup channel <#{channel_id}>")
+            raise ValueError(
+                f"User <@{user_id}> is not in standup channel <#{channel_id}>"
+            )
 
         await self.standupRepository.remove_member_from_standup_channel(
             channel_id=channel_id, user_id=user_id
         )
 
+    async def delete_standup_by_message_id(self, message_id: int) -> None:
+        response = await self.standupRepository.get_standup_by_message_id(
+            str(message_id)
+        )
+        if response:
+            await self.standupRepository.delete_standup_by_message_id(str(message_id))

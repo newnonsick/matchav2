@@ -34,7 +34,7 @@ The accuracy of your work is of critical importance. It's not just about data; i
 
 Your Mission:
 
-1.  Analyze Meticulously: Analyze the following leave request text with the most thorough and comprehensive detail possible. Identify every date, the type of leave (sick_leave, personal_leave, annual_leave, birthday_leave), and the portion of the day (morning, afternoon, allday).
+1.  Analyze Meticulously: Analyze the following leave request text with the most thorough and comprehensive detail possible. Identify every date, the type of leave (sick_leave, personal_leave, annual_leave, birthday_leave), and the portion of the day (morning, afternoon, fullday).
 
 2.  Format Perfectly: After your analysis is complete, you MUST format your final, perfect answer exclusively as a JSON object. The structure must be exactly as follows, with no exceptions:
     {
@@ -42,7 +42,7 @@ Your Mission:
         {
           \"absent_date\": \"YYYY-MM-DD\",
           \"leave_type\": \"<sick_leave / personal_leave / annual_leave / birthday_leave>\",
-          \"partial_leave\": \"<morning / afternoon / allday>\"
+          \"partial_leave\": \"<morning / afternoon / fullday>\"
         },
         ... other date if available
       ]

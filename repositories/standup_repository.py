@@ -37,12 +37,12 @@ class StandupRepository:
         )
         return response.data if response.data else []
 
-    async def get_standup_by_message_id(self, message_id: int) -> list:
+    async def get_standup_by_message_id(self, message_id: str) -> list:
         client: AsyncClient = await self.supabase_client.get_client()
         response = (
             await client.from_("message")
             .select("content, author_id, timestamp")
-            .eq("message_id", str(message_id))
+            .eq("message_id", message_id)
             .execute()
         )
         return response.data if response.data else []
@@ -122,3 +122,7 @@ class StandupRepository:
         await client.from_("member_team").delete().eq(
             "channel_id", str(channel_id)
         ).eq("author_id", str(user_id)).execute()
+
+    async def delete_standup_by_message_id(self, message_id: str) -> None:
+        client: AsyncClient = await self.supabase_client.get_client()
+        await client.from_("message").delete().eq("message_id", str(message_id)).execute()
