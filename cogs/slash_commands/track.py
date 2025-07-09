@@ -17,6 +17,12 @@ class Track(commands.Cog):
     )
     async def track(self, interaction: discord.Interaction, message_id: str):
         await interaction.response.defer(ephemeral=True)
+        if not interaction.guild:
+            await interaction.edit_original_response(
+                content="คำสั่งนี้ใช้ได้เฉพาะในเซิร์ฟเวอร์เท่านั้น"
+            )
+            return
+
         channel = interaction.channel
         if isinstance(channel, discord.TextChannel):
             if channel.id not in DataCache.STANDUP_CHANNELS:

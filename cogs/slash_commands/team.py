@@ -28,6 +28,12 @@ class Team(commands.Cog):
     ):
         await interaction.response.defer(ephemeral=hidden if hidden else False)
 
+        if not interaction.guild:
+            await interaction.edit_original_response(
+                content="คำสั่งนี้ใช้ได้เฉพาะในเซิร์ฟเวอร์เท่านั้น"
+            )
+            return
+
         channel_id = interaction.channel.id if interaction.channel is not None else None
 
         if channel_id is None:
