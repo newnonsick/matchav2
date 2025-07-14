@@ -5,6 +5,8 @@ from discord.ext import commands
 from core.custom_bot import CustomBot
 from datacache import DataCache
 
+from utils.message_utils import clear_bot_reactions
+
 
 class Track(commands.Cog):
 
@@ -41,6 +43,8 @@ class Track(commands.Cog):
 
         try:
             await self.client.standup_service.track_standup(message)
+            await clear_bot_reactions(message, self.client)
+            await message.add_reaction("✅")
             await interaction.edit_original_response(
                 content="ติดตาม Stand-Up Message เรียบร้อยแล้ว"
             )

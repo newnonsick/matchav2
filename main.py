@@ -12,7 +12,7 @@ intents.voice_states = True
 intents.message_content = True
 intents.members = True
 
-client = CustomBot(command_prefix="n!", intents=intents)
+client = CustomBot(command_prefix="!", intents=intents)
 
 
 async def load_all_cogs(client: CustomBot):
