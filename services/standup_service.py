@@ -2,7 +2,7 @@ import re
 
 import discord
 
-from config import LEAVE_TYPE_MAP, PARTIAL_LEAVE_MAP
+from config import LEAVE_TYPE_MAP, PARTIAL_LEAVE_MAP, TTS_NOTION_STANDUP_BOT_ID, CV_TRAINEE_NOTION_STANDUP_BOT_ID
 from repositories.standup_repository import StandupRepository
 from utils.datetime_utils import combine_date_with_current_time
 
@@ -64,23 +64,41 @@ class StandupService:
                     f"Message with ID {message.id} already exists in the standup database."
                 )
 
-        message_contect = message.content.strip()
+        message_content = message.content.strip()
         pattern = r"\b\d{2}/\d{2}/\d{4}\b"
 
-        dates = re.findall(pattern, message_contect)
+        dates = re.findall(pattern, message_content)
         if not dates:
             raise ValueError(
                 f"Message with ID {message.id} from {message.author.id} does not contain a valid date in the format DD/MM/YYYY."
             )
 
+        if message.author.id in (TTS_NOTION_STANDUP_BOT_ID, CV_TRAINEE_NOTION_STANDUP_BOT_ID):
+            pattern = r"(\S+)\s<@(\d+)>"
+            matches = re.findall(pattern, message_content)
+            if not matches:
+                raise ValueError(
+                    f"Message with ID {message.id} from {message.author.id} does not contain any user mentions or username."
+                )
+            user = matches[0]
+            user_name = user[0]
+            user_display_name = user[0]
+            user_id = int(user[1])
+        else:
+            user_id = message.author.id
+            user_name = message.author.name
+            user_display_name = (
+                message.author.display_name
+                if message.author.display_name
+                else user_name
+            )
+
         date = dates[0]
         timestamp = combine_date_with_current_time(date)
-        author_id = str(message.author.id)
+        author_id = str(user_id)
         message_id = str(message.id)
-        username = message.author.name
-        user_server_name = (
-            message.author.display_name if message.author.display_name else username
-        )
+        username = user_name
+        user_server_name = user_display_name
         channel_id = str(message.channel.id)
 
         # content = message_contect.replace(date, "").strip()
@@ -91,7 +109,7 @@ class StandupService:
             username=username,
             user_server_name=user_server_name,
             channel_id=channel_id,
-            content=message_contect,
+            content=message_content,
             timestamp=timestamp,
         )
 
