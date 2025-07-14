@@ -1,4 +1,4 @@
-from discord import File, TextChannel, Forbidden
+from discord import File, Forbidden, TextChannel
 from discord.ext import commands
 
 from core.custom_bot import CustomBot
@@ -16,8 +16,6 @@ class Anounce(commands.Cog):
             await ctx.reply("You must provide a message or at least one attachment.")
             return
 
-        files = [await attachment.to_file() for attachment in attachments]
-
         for channel_id in DataCache.STANDUP_CHANNELS:
             channel = self.client.get_channel(channel_id)
             if channel and isinstance(channel, TextChannel):
@@ -27,7 +25,7 @@ class Anounce(commands.Cog):
 
                     # for attachment in attachments:
                     #     await channel.send(file=await attachment.to_file())
-
+                    files = [await attachment.to_file() for attachment in attachments]
                     await channel.send(content=message, files=files)
                 except Forbidden:
                     print(f"Cannot send message to channel {channel_id}: Forbidden")

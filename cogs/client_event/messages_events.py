@@ -38,6 +38,9 @@ class MessagesEvents(commands.Cog):
             except ValueError as e:
                 print(f"ValueError: {e}")
                 await message.add_reaction("❌")
+            except discord.Forbidden as e:
+                print(f"Error tracking leave message Forbidden: {message.id} - {e}")
+                await message.add_reaction("⭕")
             except Exception as e:
                 print(f"Error tracking leave message: {e}")
                 await message.add_reaction("❌")
@@ -92,7 +95,9 @@ class MessagesEvents(commands.Cog):
             try:
                 await self.client.leave_service.delete_leave_by_message_id(before.id)
                 leave_request: list = await self.client.leave_service.track_leave(after)
-                await self.client.leave_service.send_edit_leave_comfirmation(leave_request, after)
+                await self.client.leave_service.send_edit_leave_comfirmation(
+                    leave_request, after
+                )
                 await clear_bot_reactions(updated_msg, self.client)
                 await after.add_reaction("😎")
             except ValueError as e:

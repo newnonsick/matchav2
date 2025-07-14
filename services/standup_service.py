@@ -70,7 +70,7 @@ class StandupService:
         dates = re.findall(pattern, message_contect)
         if not dates:
             raise ValueError(
-                f"Message with ID {message.id} does not contain a valid date in the format DD/MM/YYYY."
+                f"Message with ID {message.id} from {message.author.id} does not contain a valid date in the format DD/MM/YYYY."
             )
 
         date = dates[0]
