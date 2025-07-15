@@ -120,10 +120,10 @@ class StandupReport(commands.Cog):
                     continue
 
                 report_buffer = self.client.standup_report_generator.generate_report(
-                    user_name, month, user_standups
+                    make_name_safe(user_name), month, user_standups
                 )
                 report_filename = (
-                    f"standup_report_{make_name_safe(user_name)}_{month}.docx"
+                    f"standup_{make_name_safe(user_name)}_{month}.xlsx"
                 )
                 all_attachments.append((report_filename, report_buffer))
                 reports_generated += 1
@@ -137,7 +137,7 @@ class StandupReport(commands.Cog):
             if to_email:
                 compessed_file = compress_files_to_zip(
                     all_attachments,
-                    f"{f"{make_name_safe(user.display_name) if user.display_name else make_name_safe(user.name)}_" if user else ""}standup_reports_{month}.zip",
+                    f"{f"{make_name_safe(user.display_name) if user.display_name else make_name_safe(user.name)}_" if user else ""}standup_{month}.zip",
                 )
                 all_attachments: list[tuple[str, BytesIO]] = [
                     (compessed_file.name, compessed_file)
@@ -182,7 +182,7 @@ class StandupReport(commands.Cog):
                         current_size + file_size > MAX_DM_ATTACHMENT_SIZE
                         and current_zip_files
                     ):
-                        zip_name = f"{f"{make_name_safe(user.display_name) if user.display_name else make_name_safe(user.name)}_" if user else ""}standup_reports_{month}_part{file_part}.zip"
+                        zip_name = f"{f"{make_name_safe(user.display_name) if user.display_name else make_name_safe(user.name)}_" if user else ""}standup_{month}_{file_part}.zip"
                         zip_bytes_io = compress_files_to_zip(
                             current_zip_files, zip_name
                         )
@@ -199,7 +199,7 @@ class StandupReport(commands.Cog):
                     current_size += file_size
 
                 if current_zip_files:
-                    zip_name = f"{f"{make_name_safe(user.display_name) if user.display_name else make_name_safe(user.name)}_" if user else ""}standup_reports_{month}_part{file_part}.zip"
+                    zip_name = f"{f"{make_name_safe(user.display_name) if user.display_name else make_name_safe(user.name)}_" if user else ""}standup_{month}_{file_part}.zip"
                     zip_bytes_io = compress_files_to_zip(current_zip_files, zip_name)
 
                     all_zip_files.append(discord.File(zip_bytes_io, filename=zip_name))
