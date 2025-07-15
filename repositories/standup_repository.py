@@ -114,7 +114,7 @@ class StandupRepository:
             .execute()
         )
         return response.data if response.data else []
-    
+
     async def remove_member_from_standup_channel(
         self, channel_id: int, user_id: int
     ) -> None:
@@ -126,3 +126,18 @@ class StandupRepository:
     async def delete_standup_by_message_id(self, message_id: str) -> None:
         client: AsyncClient = await self.supabase_client.get_client()
         await client.from_("message").delete().eq("message_id", str(message_id)).execute()
+
+    async def get_standups_by_user_and_month(
+        self, user_id: str, from_datetime: str, to_datetime: str
+    ) -> list:
+        client: AsyncClient = await self.supabase_client.get_client()
+        response = (
+            await client.from_("message")
+            .select("content, timestamp")
+            .eq("author_id", user_id)
+            .gte("timestamp", from_datetime)
+            .lte("timestamp", to_datetime)
+            .order("timestamp", desc=False)
+            .execute()
+        )
+        return response.data if response.data else []

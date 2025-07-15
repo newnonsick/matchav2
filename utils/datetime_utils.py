@@ -7,7 +7,13 @@ def is_valid_date_format(date_str):
         return True
     except ValueError:
         return False
-
+    
+def is_valid_month_format(month_str: str) -> bool:
+    try:
+        datetime.strptime(month_str, "%Y-%m")
+        return True
+    except ValueError:
+        return False
 
 def get_datetime_range(date_str=None):
     tz = timezone(timedelta(hours=7))

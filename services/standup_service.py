@@ -2,7 +2,12 @@ import re
 
 import discord
 
-from config import LEAVE_TYPE_MAP, PARTIAL_LEAVE_MAP, TTS_NOTION_STANDUP_BOT_ID, CV_TRAINEE_NOTION_STANDUP_BOT_ID
+from config import (
+    CV_TRAINEE_NOTION_STANDUP_BOT_ID,
+    LEAVE_TYPE_MAP,
+    PARTIAL_LEAVE_MAP,
+    TTS_NOTION_STANDUP_BOT_ID,
+)
 from repositories.standup_repository import StandupRepository
 from utils.datetime_utils import combine_date_with_current_time
 
@@ -73,7 +78,10 @@ class StandupService:
                 f"Message with ID {message.id} from {message.author.id} does not contain a valid date in the format DD/MM/YYYY."
             )
 
-        if message.author.id in (TTS_NOTION_STANDUP_BOT_ID, CV_TRAINEE_NOTION_STANDUP_BOT_ID):
+        if message.author.id in (
+            TTS_NOTION_STANDUP_BOT_ID,
+            CV_TRAINEE_NOTION_STANDUP_BOT_ID,
+        ):
             pattern = r"(\S+)\s<@(\d+)>"
             matches = re.findall(pattern, message_content)
             if not matches:
@@ -137,7 +145,16 @@ class StandupService:
         team_members = []
         inleave_members = []
         for user_id in userid_in_standup_channel:
-            if user_id in userid_wrote_standup:
+            if (user_id in userid_wrote_standup) and (
+                user_id in users_inleave_map.keys()
+            ):
+                team_members.append(
+                    f"- <@{user_id}> ✅ {users_inleave_map[user_id]['leave_type']} {users_inleave_map[user_id]['partial_leave']}"
+                )
+                inleave_members.append(
+                    f"- <@{user_id}> {users_inleave_map[user_id]['content']}"
+                )
+            elif user_id in userid_wrote_standup:
                 team_members.append(f"- <@{user_id}> ✅")
             elif user_id in users_inleave_map.keys():
                 team_members.append(
@@ -256,3 +273,15 @@ class StandupService:
         )
         if response:
             await self.standupRepository.delete_standup_by_message_id(str(message_id))
+
+    async def get_standups_by_user_and_month(
+        self, user_id: str, from_datetime: str, to_datetime: str
+    ) -> list:
+        try:
+            response = await self.standupRepository.get_standups_by_user_and_month(
+                user_id, from_datetime, to_datetime
+            )
+            return response
+        except Exception as e:
+            print(f"Error retrieving standups by user and month: {e}")
+            return []

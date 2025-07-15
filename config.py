@@ -12,6 +12,11 @@ ATTENDANCE_EMPLOYEE_CHANNEL_ID = int(os.getenv("ATTENDANCE_EMPLOYEE_CHANNEL_ID",
 LEAVE_SUMMARY_CHANNEL_ID = int(os.getenv("LEAVE_SUMMARY_CHANNEL_ID", ""))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
+SMTP_SERVER = os.getenv("SMTP_SERVER", "")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+
 LEAVE_TYPE_MAP = {
     "annual_leave": "ลาพักร้อน",
     "sick_leave": "ลาป่วย",
