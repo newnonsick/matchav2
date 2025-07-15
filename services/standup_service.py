@@ -275,11 +275,11 @@ class StandupService:
             await self.standupRepository.delete_standup_by_message_id(str(message_id))
 
     async def get_standups_by_user_and_month(
-        self, user_id: str, from_datetime: str, to_datetime: str
+        self, user_id: int, from_datetime: str, to_datetime: str
     ) -> list:
         try:
             response = await self.standupRepository.get_standups_by_user_and_month(
-                user_id, from_datetime, to_datetime
+                str(user_id), from_datetime, to_datetime
             )
             return response
         except Exception as e:

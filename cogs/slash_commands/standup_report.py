@@ -1,3 +1,4 @@
+from collections import Counter
 from datetime import datetime, timedelta
 from io import BytesIO
 from typing import Optional
@@ -76,25 +77,22 @@ class StandupReport(commands.Cog):
             from_datetime = month_start.strftime("%Y-%m-%dT%H:%M:%S%z")
             to_datetime = month_end.strftime("%Y-%m-%dT%H:%M:%S%z")
 
-            target_users: list[discord.User] = []
+            target_user_ids: list[int] = []
             if user:
-                target_users.append(user)
+                target_user_ids.append(user.id)
             else:
                 all_standup_channel_ids = (
                     await self.client.standup_service.get_standup_channels()
                 )
                 for channel_id in all_standup_channel_ids:
-                    member_ids_in_channel = (
+                    member_ids_in_channel: list[int] = (
                         await self.client.standup_service.userid_in_standup_channel(
                             channel_id
                         )
                     )
-                    for member_id in member_ids_in_channel:
-                        discord_user = await self.client.fetch_user(member_id)
-                        if discord_user and discord_user not in target_users:
-                            target_users.append(discord_user)
+                    target_user_ids.extend(member_ids_in_channel)
 
-            if not target_users:
+            if not target_user_ids:
                 await interaction.edit_original_response(
                     content="No users found to generate reports for."
                 )
@@ -102,28 +100,26 @@ class StandupReport(commands.Cog):
 
             all_attachments = []
             reports_generated = 0
-            for target_user in target_users:
-                user_id = str(target_user.id)
-                user_name = (
-                    target_user.display_name
-                    if target_user.display_name
-                    else target_user.name
-                )
-
+            for target_user_id in target_user_ids:
                 user_standups = (
-                    await self.client.standup_repository.get_standups_by_user_and_month(
-                        user_id, from_datetime, to_datetime
+                    await self.client.standup_service.get_standups_by_user_and_month(
+                        target_user_id, from_datetime, to_datetime
                     )
                 )
 
                 if not user_standups:
                     continue
 
+                servernames = [user_standup.get("servername") for user_standup in user_standups if "servername" in user_standup and user_standup.get("servername") is not None]
+
+                most_user_name, _ = Counter(servernames).most_common(1)[0]
+                user_name = most_user_name
+
                 report_buffer = self.client.standup_report_generator.generate_report(
                     make_name_safe(user_name), month, user_standups
                 )
                 report_filename = (
-                    f"standup_{make_name_safe(user_name)}_{month}.xlsx"
+                    f"standup_{make_name_safe(user_name)}_{target_user_id}_{month}.xlsx"
                 )
                 all_attachments.append((report_filename, report_buffer))
                 reports_generated += 1

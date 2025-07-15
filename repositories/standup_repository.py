@@ -133,7 +133,7 @@ class StandupRepository:
         client: AsyncClient = await self.supabase_client.get_client()
         response = (
             await client.from_("message")
-            .select("content, timestamp")
+            .select("servername, content, timestamp")
             .eq("author_id", user_id)
             .gte("timestamp", from_datetime)
             .lte("timestamp", to_datetime)
