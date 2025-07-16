@@ -1,3 +1,5 @@
+import asyncio
+
 import discord
 import pytz
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -14,7 +16,7 @@ class DailySummarySchedulerCog(commands.Cog):
         self.client = client
         self.scheduler = AsyncIOScheduler(timezone=pytz.timezone("Asia/Bangkok"))
         self.scheduler.add_job(
-            self.send_standup, trigger="cron", day_of_week="mon-fri", hour=9, minute=30
+            self.send_standup, trigger="cron", day_of_week="mon-fri", hour=14, minute=41
         )
         self.scheduler.add_job(
             self.send_leave, trigger="cron", day_of_week="mon-fri", hour=9, minute=30
@@ -37,7 +39,12 @@ class DailySummarySchedulerCog(commands.Cog):
     async def send_standup(self):
         date = get_date_now()
         from_datetime, to_datetime = get_datetime_range(date)
-        for channel_id in DataCache.STANDUP_CHANNELS:
+
+        channel_ids = DataCache.STANDUP_CHANNELS
+        BATCH_SIZE = 10
+        DELEY_SECONDS = 2
+
+        async def process_channel(channel_id):
             channel = self.client.get_channel(channel_id)
             if channel and isinstance(channel, discord.TextChannel):
                 try:
@@ -62,13 +69,17 @@ class DailySummarySchedulerCog(commands.Cog):
                         channel_id=channel_id,
                         date=date,
                     )
-                    await channel.send(
-                        embed=embed,
-                    )
+                    await channel.send(embed=embed)
                 except discord.Forbidden:
                     print(f"Cannot send message to channel {channel_id}: Forbidden")
                 except Exception as e:
                     print(f"Error sending reminder to channel {channel_id}: {e}")
+
+        for i in range(0, len(channel_ids), BATCH_SIZE):
+            batch = channel_ids[i : i + BATCH_SIZE]
+            await asyncio.gather(*(process_channel(cid) for cid in batch))
+            if i + BATCH_SIZE < len(channel_ids):
+                await asyncio.sleep(DELEY_SECONDS)
 
 
 async def setup(client: CustomBot):
