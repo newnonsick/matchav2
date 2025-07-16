@@ -26,7 +26,7 @@ class Announce(commands.Cog):
             else []
         )
         preview_message = await ctx.reply(
-            f"Previewing announcement:\n\n{message or 'No message provided.'}",
+            f"Previewing announcement:\n\n{message or ''}",
             files=[
                 discord.File(BytesIO(data), filename=filename)
                 for filename, data in attachment_bytes
