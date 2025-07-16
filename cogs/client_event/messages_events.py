@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from config import CV_TRAINEE_NOTION_STANDUP_BOT_ID, TTS_NOTION_STANDUP_BOT_ID
+from config import IGNORED_BOT_IDS
 from core.custom_bot import CustomBot
 from datacache import DataCache
 from utils.message_utils import clear_bot_reactions
@@ -13,13 +13,9 @@ class MessagesEvents(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if (
-            message.author.bot
-            and (
-                message.author.id
-                not in (TTS_NOTION_STANDUP_BOT_ID, CV_TRAINEE_NOTION_STANDUP_BOT_ID)
-            )
-        ) or (not message.guild):
+        if (message.author.bot and (message.author.id not in IGNORED_BOT_IDS)) or (
+            not message.guild
+        ):
             return
 
         if message.channel.id in DataCache.STANDUP_CHANNELS:

@@ -3,10 +3,9 @@ import re
 import discord
 
 from config import (
-    CV_TRAINEE_NOTION_STANDUP_BOT_ID,
     LEAVE_TYPE_MAP,
     PARTIAL_LEAVE_MAP,
-    TTS_NOTION_STANDUP_BOT_ID,
+    IGNORED_BOT_IDS,
 )
 from repositories.standup_repository import StandupRepository
 from utils.datetime_utils import combine_date_with_current_time
@@ -78,10 +77,7 @@ class StandupService:
                 f"Message with ID {message.id} from {message.author.id} does not contain a valid date in the format DD/MM/YYYY."
             )
 
-        if message.author.id in (
-            TTS_NOTION_STANDUP_BOT_ID,
-            CV_TRAINEE_NOTION_STANDUP_BOT_ID,
-        ):
+        if message.author.id in IGNORED_BOT_IDS:
             pattern = r"(\S+)\s<@(\d+)>"
             matches = re.findall(pattern, message_content)
             if not matches:
