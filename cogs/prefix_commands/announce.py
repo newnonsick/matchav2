@@ -1,34 +1,16 @@
-import asyncio
+from io import BytesIO
+
 import discord
 from discord.ext import commands
 
 from core.custom_bot import CustomBot
 from datacache import DataCache
-from io import BytesIO
+from views.announce_confirmation_view import AnnounceConfirmationView
 
 
 class Announce(commands.Cog):
     def __init__(self, client: CustomBot):
         self.client = client
-
-    async def _send_to_channel(
-        self,
-        channel: discord.TextChannel,
-        message: str | None,
-        attachment_bytes: list[tuple[str, bytes]],
-    ):
-        try:
-            files = [
-                discord.File(BytesIO(data), filename=filename)
-                for filename, data in attachment_bytes
-            ]
-            await channel.send(content=message, files=files)
-        except discord.Forbidden:
-            print(f"[Forbidden] Cannot send to channel {channel.id}")
-        except discord.HTTPException as e:
-            print(f"[HTTPException] Error sending to {channel.id}: {e}")
-        except Exception as e:
-            print(f"[Error] Unexpected error for {channel.id}: {e}")
 
     @commands.command(name="announce")
     async def anounce(self, ctx: commands.Context, *, message: str | None = None):
@@ -38,10 +20,17 @@ class Announce(commands.Cog):
             await ctx.reply("You must provide a message or at least one attachment.")
             return
 
-        attachment_bytes = (
+        attachment_bytes: list[tuple[str, bytes]] = (
             [(att.filename, await att.read()) for att in attachments]
             if attachments
             else []
+        )
+        preview_message = await ctx.reply(
+            f"Previewing announcement:\n\n{message or 'No message provided.'}",
+            files=[
+                discord.File(BytesIO(data), filename=filename)
+                for filename, data in attachment_bytes
+            ],
         )
 
         channels: list[discord.TextChannel] = [
@@ -51,18 +40,9 @@ class Announce(commands.Cog):
             and isinstance(ch, discord.TextChannel)
         ]
 
-        BATCH_SIZE = 10
-        DELAY_BETWEEN_BATCHES = 2
-
-        for i in range(0, len(channels), BATCH_SIZE):
-            batch = channels[i : i + BATCH_SIZE]
-            await asyncio.gather(
-                *(self._send_to_channel(ch, message, attachment_bytes) for ch in batch)
-            )
-            if i + BATCH_SIZE < len(channels):
-                await asyncio.sleep(DELAY_BETWEEN_BATCHES)
-
-        await ctx.reply(f"Announcement sent to {len(channels)} channel{"s" if len(channels) != 1 else ""}.")
+        await preview_message.edit(
+            view=AnnounceConfirmationView(preview_message, attachment_bytes, channels, message)
+        )
 
 
 async def setup(client: CustomBot):
