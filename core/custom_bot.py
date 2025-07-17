@@ -1,12 +1,22 @@
 from discord.ext import commands
 
-from config import SMTP_PASSWORD, SMTP_PORT, SMTP_SERVER, SMTP_USERNAME, SUPABASE_KEY, SUPABASE_URL, GEMINI_API_KEY
+from config import (
+    GEMINI_API_KEY,
+    SMTP_PASSWORD,
+    SMTP_PORT,
+    SMTP_SERVER,
+    SMTP_USERNAME,
+    SUPABASE_KEY,
+    SUPABASE_URL,
+)
 from db.supabase import SupabaseClient
 from repositories.leave_repository import LeaveRepository
+from repositories.member_repository import MemberRepository
 from repositories.standup_repository import StandupRepository
 from services.email_service import EmailService
 from services.gemini_service import GeminiService
 from services.leave_service import LeaveService
+from services.member_service import MemberService
 from services.standup_report_generator import StandupReportGenerator
 from services.standup_service import StandupService
 
@@ -29,6 +39,8 @@ class CustomBot(commands.Bot):
             smtp_username=SMTP_USERNAME,
             smtp_password=SMTP_PASSWORD,
         )
+        self.member_repository = MemberRepository(self.db)
+        self.member_service = MemberService(self.member_repository)
 
     async def close(self):
         # Custom cleanup logic can be added here if needed

@@ -8,6 +8,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from core.custom_bot import CustomBot
+from datacache import DataCache
 from utils.datetime_utils import is_valid_month_format
 from utils.email_utils import is_valid_email_format
 from utils.file_utils import compress_files_to_zip
@@ -26,6 +27,7 @@ class StandupReport(commands.Cog):
         month="The month for which to generate the report (format: YYYY-MM)",
         user="The user for whom to generate the report (defaults is everyone)",
         to_email="The email address to send the report to",
+        team_channel="Optional team channel to generate the report for (defaults to all teams)",
     )
     async def standup_report(
         self,
@@ -33,6 +35,7 @@ class StandupReport(commands.Cog):
         month: str,
         to_email: Optional[str] = None,
         user: Optional[discord.User] = None,
+        team_channel: Optional[discord.TextChannel] = None,
     ):
         await interaction.response.defer(ephemeral=True)
 
@@ -42,11 +45,18 @@ class StandupReport(commands.Cog):
             )
             return
 
-        if not month:
+        if team_channel and user:
             await interaction.edit_original_response(
-                content="Please provide a month in the format YYYY-MM."
+                content="You cannot specify both a user and a team channel. Please choose one."
             )
             return
+
+        if team_channel:
+            if team_channel.id not in DataCache.STANDUP_CHANNELS:
+                await interaction.edit_original_response(
+                    content="Please select a valid stand-up team channel."
+                )
+                return
 
         if not is_valid_month_format(month):
             await interaction.edit_original_response(
@@ -77,22 +87,28 @@ class StandupReport(commands.Cog):
             from_datetime = month_start.strftime("%Y-%m-%dT%H:%M:%S%z")
             to_datetime = month_end.strftime("%Y-%m-%dT%H:%M:%S%z")
 
-            target_user_ids: list[int] = []
+            target_users: list[dict] = []
             if user:
-                target_user_ids.append(user.id)
-            else:
-                all_standup_channel_ids = (
-                    await self.client.standup_service.get_standup_channels()
+                target_users.append(
+                    {
+                        "author_id": user.id,
+                        "server_name": (
+                            user.display_name if user.display_name else user.name
+                        ),
+                    }
                 )
-                for channel_id in all_standup_channel_ids:
-                    member_ids_in_channel: list[int] = (
-                        await self.client.standup_service.userid_in_standup_channel(
-                            channel_id
-                        )
+            else:
+                if team_channel:
+                    all_standup_members = await self.client.member_service.get_standup_members_by_channelid(
+                        team_channel.id
                     )
-                    target_user_ids.extend(member_ids_in_channel)
+                else:
+                    all_standup_members = (
+                        await self.client.member_service.get_all_standup_members()
+                    )
+                target_users.extend(all_standup_members)
 
-            if not target_user_ids:
+            if not target_users:
                 await interaction.edit_original_response(
                     content="No users found to generate reports for."
                 )
@@ -100,7 +116,10 @@ class StandupReport(commands.Cog):
 
             all_attachments = []
             reports_generated = 0
-            for target_user_id in target_user_ids:
+            for target_user in target_users:
+                target_user_id = target_user["author_id"]
+                target_user_name = target_user["server_name"]
+
                 user_standups = (
                     await self.client.standup_service.get_standups_by_user_and_month(
                         target_user_id, from_datetime, to_datetime
@@ -110,17 +129,10 @@ class StandupReport(commands.Cog):
                 if not user_standups:
                     continue
 
-                servernames = [user_standup.get("servername") for user_standup in user_standups if "servername" in user_standup and user_standup.get("servername") is not None]
-
-                most_user_name, _ = Counter(servernames).most_common(1)[0]
-                user_name = most_user_name
-
                 report_buffer = self.client.standup_report_generator.generate_report(
-                    make_name_safe(user_name), month, user_standups
+                    make_name_safe(target_user_name), month, user_standups
                 )
-                report_filename = (
-                    f"standup_{make_name_safe(user_name)}_{target_user_id}_{month}.xlsx"
-                )
+                report_filename = f"standup_{make_name_safe(target_user_name)}_{target_user_id}_{month}.xlsx"
                 all_attachments.append((report_filename, report_buffer))
                 reports_generated += 1
 
@@ -131,9 +143,17 @@ class StandupReport(commands.Cog):
                 return
 
             if to_email:
+                file_user_name = (
+                    f"{make_name_safe(user.display_name) if user.display_name else make_name_safe(user.name)}_"
+                    if user
+                    else ""
+                )
+                file_team_name = (
+                    f"{make_name_safe(team_channel.name)}_" if team_channel else ""
+                )
                 compessed_file = compress_files_to_zip(
                     all_attachments,
-                    f"{f"{make_name_safe(user.display_name) if user.display_name else make_name_safe(user.name)}_" if user else ""}standup_{month}.zip",
+                    f"{file_user_name}{file_team_name}standup_{month}.zip",
                 )
                 all_attachments: list[tuple[str, BytesIO]] = [
                     (compessed_file.name, compessed_file)
@@ -152,6 +172,7 @@ class StandupReport(commands.Cog):
                         content=f"Failed to send the combined stand-up report to {to_email}."
                     )
             else:
+
                 user_dm = interaction.user
                 if not user_dm:
                     await interaction.edit_original_response(
@@ -163,6 +184,14 @@ class StandupReport(commands.Cog):
                 current_size = 0
                 file_part = 1
                 MAX_DM_ATTACHMENT_SIZE = 8 * 1024 * 1024
+                file_user_name = (
+                    f"{make_name_safe(user.display_name) if user.display_name else make_name_safe(user.name)}_"
+                    if user
+                    else ""
+                )
+                file_team_name = (
+                    f"{make_name_safe(team_channel.name)}_" if team_channel else ""
+                )
 
                 all_zip_files: list[discord.File] = []
 
@@ -178,7 +207,7 @@ class StandupReport(commands.Cog):
                         current_size + file_size > MAX_DM_ATTACHMENT_SIZE
                         and current_zip_files
                     ):
-                        zip_name = f"{f"{make_name_safe(user.display_name) if user.display_name else make_name_safe(user.name)}_" if user else ""}standup_{month}_{file_part}.zip"
+                        zip_name = f"{file_user_name}{file_team_name}standup_{month}_{file_part}.zip"
                         zip_bytes_io = compress_files_to_zip(
                             current_zip_files, zip_name
                         )
@@ -195,7 +224,7 @@ class StandupReport(commands.Cog):
                     current_size += file_size
 
                 if current_zip_files:
-                    zip_name = f"{f"{make_name_safe(user.display_name) if user.display_name else make_name_safe(user.name)}_" if user else ""}standup_{month}_{file_part}.zip"
+                    zip_name = f"{file_user_name}{file_team_name}standup_{month}_{file_part}.zip"
                     zip_bytes_io = compress_files_to_zip(current_zip_files, zip_name)
 
                     all_zip_files.append(discord.File(zip_bytes_io, filename=zip_name))
