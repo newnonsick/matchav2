@@ -10,6 +10,7 @@ BEGIN
     SELECT a.author_id, a.leave_type, a.partial_leave, a.content
     FROM attendance a
     JOIN member_team m ON a.author_id = m.author_id
-    WHERE a.absent_date = _date AND m.channel_id = _channel_id;
+    WHERE a.absent_date = _date AND m.channel_id = _channel_id
+    ORDER BY m.server_name asc;
 END;
 $$ LANGUAGE plpgsql STABLE;

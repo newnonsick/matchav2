@@ -33,6 +33,7 @@ class StandupRepository:
             await client.from_("member_team")
             .select("author_id")
             .eq("channel_id", channel_id)
+            .order("server_name", desc=False)
             .execute()
         )
         return response.data if response.data else []

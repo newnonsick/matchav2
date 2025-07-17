@@ -15,5 +15,6 @@ as $$
   from public.attendance a
   join public.member_team mt on a.author_id = mt.author_id 
   join public.team t on mt.channel_id = t.channel_id
-  where a.absent_date = target_date;
+  where a.absent_date = target_date
+  order by t.team_name asc, mt.server_name asc;
 $$;
