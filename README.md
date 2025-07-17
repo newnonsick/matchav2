@@ -91,7 +91,7 @@ Matcha Bot is a versatile Discord bot designed to streamline daily stand-up proc
 
 1.  **Clone the repository:**
     ```bash
-    git clone <repository-url>
+    git clone https://github.com/newnonsick/matchav2.git
     cd matchav2
     ```
 
@@ -112,7 +112,7 @@ Matcha Bot is a versatile Discord bot designed to streamline daily stand-up proc
     ```env
     BOT_TOKEN="YOUR_DISCORD_BOT_TOKEN"
     SUPABASE_URL="YOUR_SUPABASE_URL"
-    SUPABASE_KEY="YOUR_SUPABASE_ANON_KEY"
+    SUPABASE_KEY="YOUR_SUPABASE_SERVICE_ROLE_KEY"
     ATTENDANCE_TRAINEE_CHANNEL_ID="YOUR_TRAINEE_ATTENDANCE_CHANNEL_ID"
     ATTENDANCE_EMPLOYEE_CHANNEL_ID="YOUR_EMPLOYEE_ATTENDANCE_CHANNEL_ID"
     LEAVE_SUMMARY_CHANNEL_ID="YOUR_LEAVE_SUMMARY_CHANNEL_ID"
