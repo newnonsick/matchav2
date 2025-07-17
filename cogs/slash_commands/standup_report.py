@@ -1,4 +1,3 @@
-from collections import Counter
 from datetime import datetime, timedelta
 from io import BytesIO
 from typing import Optional
