@@ -139,24 +139,24 @@ class LeaveService:
 
         await message.author.send(embed=embed)
 
-    async def send_leave_deletion_notification(self, message: discord.Message) -> None:
-        embed_color = discord.Color.from_rgb(231, 76, 60)
+    # async def send_leave_deletion_notification(self, message: discord.Message) -> None:
+    #     embed_color = discord.Color.from_rgb(231, 76, 60)
 
-        embed = discord.Embed(
-            title="การลาถูกลบ",
-            description="ข้อความการลาได้ถูกลบออกจากระบบ",
-            color=embed_color,
-        )
+    #     embed = discord.Embed(
+    #         title="การลาถูกลบ",
+    #         description="ข้อความการลาได้ถูกลบออกจากระบบ",
+    #         color=embed_color,
+    #     )
 
-        embed.add_field(
-            name="\n📝 รายละเอียดการลา:",
-            value=f"```\n{message.content}\n```",
-            inline=False,
-        )
+    #     embed.add_field(
+    #         name="\n📝 รายละเอียดการลา:",
+    #         value=f"```\n{message.content}\n```",
+    #         inline=False,
+    #     )
 
-        embed.set_footer(text="หากมีปัญหาหรือข้อสงสัย โปรดติดต่อฝ่ายทรัพยากรบุคคล")
+    #     embed.set_footer(text="หากมีปัญหาหรือข้อสงสัย โปรดติดต่อฝ่ายทรัพยากรบุคคล")
 
-        await message.author.send(embed=embed)
+    #     await message.author.send(embed=embed)
 
     async def delete_leave_by_message_id(self, message_id: int) -> None:
         response = await self.leave_repository.get_leave_by_message_id(str(message_id))
