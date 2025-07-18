@@ -4,6 +4,7 @@ from discord.ext import commands
 from config import IGNORED_BOT_IDS
 from core.custom_bot import CustomBot
 from datacache import DataCache
+from models import LeaveInfo
 from utils.message_utils import clear_bot_reactions
 
 
@@ -31,8 +32,8 @@ class MessagesEvents(commands.Cog):
 
         elif message.channel.id in DataCache.ATTENDANCE_CHANNELS:
             try:
-                leave_request: list = await self.client.leave_service.track_leave(
-                    message
+                leave_request: list[LeaveInfo] = (
+                    await self.client.leave_service.track_leave(message)
                 )
                 await self.client.leave_service.send_leave_confirmation(
                     leave_request, message
@@ -163,8 +164,8 @@ class MessagesEvents(commands.Cog):
         elif channel_id in DataCache.ATTENDANCE_CHANNELS:
             try:
                 await self.client.leave_service.delete_leave_by_message_id(message.id)
-                leave_request: list = await self.client.leave_service.track_leave(
-                    message
+                leave_request: list[LeaveInfo] = (
+                    await self.client.leave_service.track_leave(message)
                 )
                 await self.client.leave_service.send_edit_leave_comfirmation(
                     leave_request, message

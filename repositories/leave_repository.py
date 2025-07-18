@@ -1,4 +1,5 @@
 from typing import Optional
+
 from supabase import AsyncClient
 
 from db.supabase import SupabaseClient

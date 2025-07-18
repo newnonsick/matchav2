@@ -1,6 +1,10 @@
+import json
+from typing import Optional
+
 from google import genai
 from google.genai import types
 
+from models import LeaveRequestAnalysis
 from utils.datetime_utils import get_date_now
 
 
@@ -14,7 +18,9 @@ class GeminiService:
         )
         return client
 
-    def analyze_leave_request(self, leave_request: str) -> str:
+    def analyze_leave_request(
+        self, leave_request: str
+    ) -> Optional[LeaveRequestAnalysis]:
         client = self._get_gemini_client()
         model = "gemini-2.0-flash-lite"
         contents = [
@@ -76,4 +82,8 @@ Your final output must contain ONLY the JSON object and nothing else. No introdu
             response.text.strip("```json").strip("```") if response.text else ""
         )
 
-        return response_text
+        try:
+            response_json = json.loads(response_text)
+            return LeaveRequestAnalysis(**response_json)
+        except json.JSONDecodeError as e:
+            return None

@@ -67,3 +67,15 @@ class UserStandupReport(BaseModel):
 class MemberTeam(BaseModel):
     author_id: str
     server_name: str
+
+
+class LeaveInfo(BaseModel):
+    absent_date: str
+    leave_type: Literal[
+        "annual_leave", "sick_leave", "personal_leave", "birthday_leave"
+    ]
+    partial_leave: Optional[Literal["morning", "afternoon", "fullday"]]
+
+
+class LeaveRequestAnalysis(BaseModel):
+    leave_request: list[LeaveInfo]

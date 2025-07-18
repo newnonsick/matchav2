@@ -41,7 +41,9 @@ class Announce(commands.Cog):
         ]
 
         await preview_message.edit(
-            view=AnnounceConfirmationView(preview_message, attachment_bytes, channels, message)
+            view=AnnounceConfirmationView(
+                preview_message, attachment_bytes, channels, message
+            )
         )
 
 

@@ -1,7 +1,5 @@
 import discord
 
-from core.custom_bot import CustomBot
-
 
 async def clear_bot_reactions(msg: discord.Message, client: discord.Client):
     for reaction in msg.reactions:
@@ -10,4 +8,4 @@ async def clear_bot_reactions(msg: discord.Message, client: discord.Client):
                 if client.user is not None and user.id == client.user.id:
                     await msg.remove_reaction(reaction.emoji, user)
         except discord.HTTPException:
-            pass 
+            pass

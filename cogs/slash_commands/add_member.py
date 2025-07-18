@@ -4,7 +4,6 @@ from discord.ext import commands
 
 from core.custom_bot import CustomBot
 from datacache import DataCache
-
 from utils.datetime_utils import get_datetime_now
 
 
@@ -46,7 +45,7 @@ class AddMember(commands.Cog):
                 channel_id=channel_id,
                 user_id=user_id,
                 user_name=user_name,
-                created_at=created_at
+                created_at=created_at,
             )
             await interaction.edit_original_response(
                 content=f"เพิ่มสมาชิก <@{user.id}> เรียบร้อยแล้ว"
@@ -55,6 +54,7 @@ class AddMember(commands.Cog):
             await interaction.edit_original_response(content=str(e))
         except Exception as e:
             await interaction.edit_original_response(content=f"เกิดข้อผิดพลาด: {str(e)}")
+
 
 async def setup(client: CustomBot):
     await client.add_cog(AddMember(client))

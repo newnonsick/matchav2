@@ -7,13 +7,15 @@ def is_valid_date_format(date_str):
         return True
     except ValueError:
         return False
-    
+
+
 def is_valid_month_format(month_str: str) -> bool:
     try:
         datetime.strptime(month_str, "%Y-%m")
         return True
     except ValueError:
         return False
+
 
 def get_datetime_range(date_str=None):
     tz = timezone(timedelta(hours=7))
@@ -31,10 +33,12 @@ def get_datetime_range(date_str=None):
         "%Y-%m-%dT%H:%M:%S%z"
     )
 
+
 def get_date_now():
     tz = timezone(timedelta(hours=7))
     now = datetime.now(tz)
     return now.strftime("%Y-%m-%d")
+
 
 def get_datetime_now():
     tz = timezone(timedelta(hours=7))

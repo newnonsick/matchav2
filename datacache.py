@@ -1,8 +1,8 @@
-from core.custom_bot import CustomBot
-from typing import List
 import copy
+from typing import List
 
 from config import ATTENDANCE_EMPLOYEE_CHANNEL_ID, ATTENDANCE_TRAINEE_CHANNEL_ID
+from core.custom_bot import CustomBot
 
 
 class DataCache:
@@ -19,7 +19,9 @@ class DataCache:
     @classmethod
     async def _load_standup_channels(cls, client: CustomBot):
         try:
-            standup_channels: List[int] = await client.standup_service.get_standup_channel_ids()
+            standup_channels: List[int] = (
+                await client.standup_service.get_standup_channel_ids()
+            )
             cls.STANDUP_CHANNELS = copy.deepcopy(standup_channels)
         except Exception as e:
             print(f"Error loading standup channels: {e}")

@@ -2,6 +2,7 @@ import asyncio
 import os
 
 import discord
+
 from config import BOT_TOKEN
 from core.custom_bot import CustomBot
 from datacache import DataCache
@@ -38,6 +39,7 @@ async def main():
         print("Connected to Supabase successfully.")
         await DataCache.initialize(client)
         await client.start(BOT_TOKEN)
+
 
 if __name__ == "__main__":
     try:

@@ -1,10 +1,9 @@
 import asyncio
-import json
 
 import discord
 
 from config import LEAVE_TYPE_MAP, PARTIAL_LEAVE_MAP
-from models import DailyLeaveSummary, LeaveByDateChannel, LeaveRequest
+from models import DailyLeaveSummary, LeaveByDateChannel, LeaveInfo, LeaveRequest
 from repositories.leave_repository import LeaveRepository
 from services.gemini_service import GeminiService
 from utils.datetime_utils import get_datetime_now
@@ -62,36 +61,34 @@ class LeaveService:
 
         return embed
 
-    async def track_leave(self, message: discord.Message) -> list:
-        gemini_response = await asyncio.to_thread(
+    async def track_leave(self, message: discord.Message) -> list[LeaveInfo]:
+        leave_request_analyzed = await asyncio.to_thread(
             self.gemini_service.analyze_leave_request, message.content
         )
 
-        if not gemini_response:
+        if not leave_request_analyzed:
             raise ValueError("ไม่สามารถวิเคราะห์ข้อความลาได้")
-
-        response_json = json.loads(gemini_response)
 
         created_at = get_datetime_now()
 
-        for leave in response_json.get("leave_request", []):
+        for leave in leave_request_analyzed.leave_request:
             leave_request = LeaveRequest(
                 message_id=str(message.id),
                 author_id=str(message.author.id),
                 channel_id=str(message.channel.id),
                 content=message.content.strip(),
-                leave_type=leave.get("leave_type"),
-                partial_leave=leave.get("partial_leave"),
-                absent_date=leave.get("absent_date"),
+                leave_type=leave.leave_type,
+                partial_leave=leave.partial_leave,
+                absent_date=leave.absent_date,
                 created_at=created_at,
             )
 
             await self.leave_repository.insert_leave(leave_request)
 
-        return response_json.get("leave_request", [])
+        return leave_request_analyzed.leave_request
 
     async def send_leave_confirmation(
-        self, leave_request: list, message: discord.Message
+        self, leave_request: list[LeaveInfo], message: discord.Message
     ) -> None:
         if not leave_request:
             return
@@ -105,11 +102,11 @@ class LeaveService:
         )
 
         for leave in leave_request:
-            leave_type_display = LEAVE_TYPE_MAP.get(leave["leave_type"], "ไม่ระบุประเภท")
-            partial_leave_display = PARTIAL_LEAVE_MAP.get(leave["partial_leave"], "")
+            leave_type_display = LEAVE_TYPE_MAP.get(leave.leave_type, "ไม่ระบุประเภท")
+            partial_leave_display = PARTIAL_LEAVE_MAP.get(leave.partial_leave or "", "")
 
             embed.add_field(
-                name=f"🗓️ วันที่: {leave['absent_date']}",
+                name=f"🗓️ วันที่: {leave.absent_date}",
                 value=f"**ประเภท:** {leave_type_display} {partial_leave_display}",
                 inline=False,
             )
@@ -151,7 +148,7 @@ class LeaveService:
             await self.leave_repository.delete_leave_by_message_id(str(message_id))
 
     async def send_edit_leave_comfirmation(
-        self, leave_request: list, message: discord.Message
+        self, leave_request: list[LeaveInfo], message: discord.Message
     ) -> None:
         if not leave_request:
             return
@@ -165,11 +162,11 @@ class LeaveService:
         )
 
         for leave in leave_request:
-            leave_type_display = LEAVE_TYPE_MAP.get(leave["leave_type"], "ไม่ระบุประเภท")
-            partial_leave_display = PARTIAL_LEAVE_MAP.get(leave["partial_leave"], "")
+            leave_type_display = LEAVE_TYPE_MAP.get(leave.leave_type, "ไม่ระบุประเภท")
+            partial_leave_display = PARTIAL_LEAVE_MAP.get(leave.partial_leave or "", "")
 
             embed.add_field(
-                name=f"🗓️ วันที่: {leave['absent_date']}",
+                name=f"🗓️ วันที่: {leave.absent_date}",
                 value=f"**ประเภท:** {leave_type_display} {partial_leave_display}",
                 inline=False,
             )

@@ -218,7 +218,6 @@ class StandupService:
         )
         return response
 
-
     async def add_member_to_standup_channel(
         self, channel_id: int, user_id: int, user_name: str, created_at: str
     ) -> None:

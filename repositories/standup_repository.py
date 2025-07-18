@@ -3,12 +3,7 @@ from typing import Optional
 from supabase import AsyncClient
 
 from db.supabase import SupabaseClient
-from models import (
-    StandupChannel,
-    StandupMember,
-    StandupMessage,
-    UserStandupReport,
-)
+from models import StandupChannel, StandupMember, StandupMessage
 
 
 class StandupRepository:
