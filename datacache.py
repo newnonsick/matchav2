@@ -19,7 +19,7 @@ class DataCache:
     @classmethod
     async def _load_standup_channels(cls, client: CustomBot):
         try:
-            standup_channels: List[int] = await client.standup_service.get_standup_channels()
+            standup_channels: List[int] = await client.standup_service.get_standup_channel_ids()
             cls.STANDUP_CHANNELS = copy.deepcopy(standup_channels)
         except Exception as e:
             print(f"Error loading standup channels: {e}")

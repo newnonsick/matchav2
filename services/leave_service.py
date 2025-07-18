@@ -4,6 +4,7 @@ import json
 import discord
 
 from config import LEAVE_TYPE_MAP, PARTIAL_LEAVE_MAP
+from models import DailyLeaveSummary, LeaveByDateChannel, LeaveRequest
 from repositories.leave_repository import LeaveRepository
 from services.gemini_service import GeminiService
 from utils.datetime_utils import get_datetime_now
@@ -16,37 +17,29 @@ class LeaveService:
         self.leave_repository: LeaveRepository = leave_repository
         self.gemini_service: GeminiService = gemini_service
 
-    async def get_user_inleave(self, channel_id, date) -> list:
+    async def get_user_inleave(self, channel_id, date) -> list[LeaveByDateChannel]:
 
-        try:
-            response = await self.leave_repository.get_user_inleave(channel_id, date)
-            return response
-        except Exception as e:
-            print(f"Error retrieving user IDs in leave: {e}")
-            return []
+        response = await self.leave_repository.get_user_inleave(channel_id, date)
+        return response
 
-    async def get_daily_leaves(self, date: str) -> list:
-        try:
-            response = await self.leave_repository.get_daily_leaves(date)
-            return response
-        except Exception as e:
-            print(f"Error retrieving daily leave: {e}")
-            return []
+    async def get_daily_leaves(self, date: str) -> list[DailyLeaveSummary]:
+        response = await self.leave_repository.get_daily_leaves(date)
+        return response
 
     async def get_daily_leaves_embed(self, date: str) -> discord.Embed:
         response = await self.get_daily_leaves(date)
-        team_leaves = {}
+        team_leaves: dict[str, list] = {}
         for leave in response:
-            if leave["team_name"] not in team_leaves:
-                team_leaves[leave["team_name"]] = []
+            if leave.team_name not in team_leaves:
+                team_leaves[leave.team_name] = []
 
             member_leave = {
-                "author_id": leave["author_id"],
-                "leave_type": leave["leave_type"],
-                "partial_leave": leave["partial_leave"],
+                "author_id": leave.author_id,
+                "leave_type": leave.leave_type,
+                "partial_leave": leave.partial_leave,
             }
 
-            team_leaves[leave["team_name"]].append(member_leave)
+            team_leaves[leave.team_name].append(member_leave)
 
         embed = discord.Embed(
             title=f"**📢แจ้งเตือน: พนักงานลาประจำวันนี้ {date}**",
@@ -82,24 +75,18 @@ class LeaveService:
         created_at = get_datetime_now()
 
         for leave in response_json.get("leave_request", []):
-            absent_date = leave.get("absent_date")
-            leave_type = leave.get("leave_type")
-            partial_leave = leave.get("partial_leave")
-            content = message.content.strip()
-            message_id = str(message.id)
-            author_id = str(message.author.id)
-            channel_id = str(message.channel.id)
-
-            await self.leave_repository.insert_leave(
-                message_id=message_id,
-                author_id=author_id,
-                channel_id=channel_id,
-                content=content,
-                leave_type=leave_type,
-                partial_leave=partial_leave,
-                absent_date=absent_date,
+            leave_request = LeaveRequest(
+                message_id=str(message.id),
+                author_id=str(message.author.id),
+                channel_id=str(message.channel.id),
+                content=message.content.strip(),
+                leave_type=leave.get("leave_type"),
+                partial_leave=leave.get("partial_leave"),
+                absent_date=leave.get("absent_date"),
                 created_at=created_at,
             )
+
+            await self.leave_repository.insert_leave(leave_request)
 
         return response_json.get("leave_request", [])
 

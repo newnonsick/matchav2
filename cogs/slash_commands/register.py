@@ -27,9 +27,9 @@ class Register(commands.Cog):
             return
 
         await self.client.standup_service.regis_new_standup_channel(
-            channel_id=str(interaction.channel.id),
+            channel_id=interaction.channel.id,
             team_name=interaction.channel.name,
-            server_id=str(interaction.guild.id),
+            server_id=interaction.guild.id,
             server_name=interaction.guild.name,
             timestamp=interaction.created_at.isoformat()
         )

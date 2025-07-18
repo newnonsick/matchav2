@@ -8,6 +8,7 @@ from discord.ext import commands
 
 from core.custom_bot import CustomBot
 from datacache import DataCache
+from models import MemberTeam
 from utils.datetime_utils import is_valid_month_format
 from utils.email_utils import is_valid_email_format
 from utils.file_utils import compress_files_to_zip
@@ -86,23 +87,25 @@ class StandupReport(commands.Cog):
             from_datetime = month_start.strftime("%Y-%m-%dT%H:%M:%S%z")
             to_datetime = month_end.strftime("%Y-%m-%dT%H:%M:%S%z")
 
-            target_users: list[dict] = []
+            target_users: list[MemberTeam] = []
             if user:
                 target_users.append(
-                    {
-                        "author_id": user.id,
-                        "server_name": (
+                    MemberTeam(
+                        author_id=str(user.id),
+                        server_name=(
                             user.display_name if user.display_name else user.name
                         ),
-                    }
+                    )
                 )
             else:
                 if team_channel:
-                    all_standup_members = await self.client.member_service.get_standup_members_by_channelid(
-                        team_channel.id
+                    all_standup_members: list[MemberTeam] = (
+                        await self.client.member_service.get_standup_members_by_channelid(
+                            team_channel.id
+                        )
                     )
                 else:
-                    all_standup_members = (
+                    all_standup_members: list[MemberTeam] = (
                         await self.client.member_service.get_all_standup_members()
                     )
                 target_users.extend(all_standup_members)
@@ -116,12 +119,12 @@ class StandupReport(commands.Cog):
             all_attachments = []
             reports_generated = 0
             for target_user in target_users:
-                target_user_id = target_user["author_id"]
-                target_user_name = target_user["server_name"]
+                target_user_id = target_user.author_id
+                target_user_name = target_user.server_name
 
                 user_standups = (
                     await self.client.standup_service.get_standups_by_user_and_month(
-                        target_user_id, from_datetime, to_datetime
+                        int(target_user_id), from_datetime, to_datetime
                     )
                 )
 
