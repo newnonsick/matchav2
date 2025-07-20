@@ -13,7 +13,7 @@ class Announce(commands.Cog):
         self.client = client
 
     @commands.command(name="announce")
-    async def anounce(self, ctx: commands.Context, *, message: str | None = None):
+    async def announce(self, ctx: commands.Context, *, message: str | None = None):
         attachments = ctx.message.attachments
 
         if not message and not attachments:
