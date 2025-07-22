@@ -3,7 +3,7 @@ from typing import Optional
 from supabase import AsyncClient
 
 from db.supabase import SupabaseClient
-from models import StandupChannel, StandupMember, StandupMessage
+from models import StandupChannel, StandupMessage
 
 
 class StandupRepository:
@@ -66,33 +66,6 @@ class StandupRepository:
     async def regis_new_standup_channel(self, standup_channel: StandupChannel) -> None:
         client: AsyncClient = await self.supabase_client.get_client()
         await client.from_("team").insert(standup_channel.model_dump()).execute()
-
-    async def add_member_to_standup_channel(
-        self, standup_member: StandupMember
-    ) -> None:
-        client: AsyncClient = await self.supabase_client.get_client()
-        await client.from_("member_team").insert(standup_member.model_dump()).execute()
-
-    async def is_user_added_to_standup_channel(
-        self, channel_id: int, user_id: int
-    ) -> bool:
-        client: AsyncClient = await self.supabase_client.get_client()
-        response = (
-            await client.from_("member_team")
-            .select("author_id")
-            .eq("channel_id", str(channel_id))
-            .eq("author_id", str(user_id))
-            .execute()
-        )
-        return bool(response.data)
-
-    async def remove_member_from_standup_channel(
-        self, channel_id: int, user_id: int
-    ) -> None:
-        client: AsyncClient = await self.supabase_client.get_client()
-        await client.from_("member_team").delete().eq("channel_id", str(channel_id)).eq(
-            "author_id", str(user_id)
-        ).execute()
 
     async def delete_standup_by_message_id(self, message_id: str) -> None:
         client: AsyncClient = await self.supabase_client.get_client()

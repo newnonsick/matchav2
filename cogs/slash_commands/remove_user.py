@@ -67,7 +67,7 @@ class RemoveUser(commands.Cog):
 
             channel_id = interaction.channel.id
 
-            await self.client.standup_service.remove_member_from_standup_channel(
+            await self.client.member_service.remove_member_from_standup_channel(
                 channel_id, real_user_id
             )
             await interaction.edit_original_response(

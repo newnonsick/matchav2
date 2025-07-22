@@ -1,6 +1,8 @@
 import copy
 from typing import List
 
+from discord import Message
+
 from config import ATTENDANCE_EMPLOYEE_CHANNEL_ID, ATTENDANCE_TRAINEE_CHANNEL_ID
 from core.custom_bot import CustomBot
 
@@ -11,6 +13,7 @@ class DataCache:
         ATTENDANCE_EMPLOYEE_CHANNEL_ID,
     ]
     STANDUP_CHANNELS: List[int] = []
+    daily_leave_summary: dict[str, Message] = {}
 
     @classmethod
     async def initialize(cls, client: CustomBot):

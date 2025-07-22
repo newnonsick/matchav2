@@ -41,9 +41,12 @@ class Track(commands.Cog):
             return
 
         try:
-            await self.client.standup_service.track_standup(message)
+            time_status = await self.client.standup_service.track_standup(message)
             await clear_bot_reactions(message, self.client)
-            await message.add_reaction("✅")
+            if time_status == "today":
+                await message.add_reaction("✅")
+            elif time_status == "future":
+                await message.add_reaction("☑️")
             await interaction.edit_original_response(
                 content="ติดตาม Stand-Up Message เรียบร้อยแล้ว"
             )

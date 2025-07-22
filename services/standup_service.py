@@ -1,18 +1,17 @@
 import re
-from typing import Optional
+from typing import Literal, Optional
 
 import discord
 
 from config import IGNORED_BOT_IDS, LEAVE_TYPE_MAP, PARTIAL_LEAVE_MAP
-from models import (
-    LeaveByDateChannel,
-    StandupChannel,
-    StandupMember,
-    StandupMessage,
-    UserStandupReport,
-)
+from models import LeaveByDateChannel, StandupChannel, StandupMessage, UserStandupReport
 from repositories.standup_repository import StandupRepository
-from utils.datetime_utils import combine_date_with_current_time
+from utils.datetime_utils import (
+    combine_date_with_specific_time,
+    combine_date_with_start_time,
+    compare_date_with_today,
+    convert_to_bangkok,
+)
 
 
 class StandupService:
@@ -48,7 +47,9 @@ class StandupService:
             if "author_id" in message and message["author_id"]
         ]
 
-    async def track_standup(self, message: discord.Message, check: bool = True) -> None:
+    async def track_standup(
+        self, message: discord.Message, check: bool = True
+    ) -> Literal["today", "future"]:
         if check:
             response = await self.standupRepository.get_standup_by_message_id(
                 str(message.id)
@@ -65,6 +66,13 @@ class StandupService:
         if not dates:
             raise ValueError(
                 f"Message with ID {message.id} from {message.author.id} does not contain a valid date in the format DD/MM/YYYY."
+            )
+
+        time_status = compare_date_with_today(dates[0])
+
+        if time_status == "past":
+            raise ValueError(
+                f"Message with ID {message.id} from {message.author.id} contains a date in the past: {dates[0]}."
             )
 
         if message.author.id in IGNORED_BOT_IDS:
@@ -87,8 +95,15 @@ class StandupService:
                 else user_name
             )
 
+        message_datetime = message.created_at
+
         date = dates[0]
-        timestamp = combine_date_with_current_time(date)
+        if time_status == "today":
+            timestamp = combine_date_with_specific_time(
+                date, convert_to_bangkok(message_datetime).time()
+            )
+        elif time_status == "future":
+            timestamp = combine_date_with_start_time(date)
 
         standup_message = StandupMessage(
             message_id=str(message.id),
@@ -103,6 +118,8 @@ class StandupService:
         # content = message_contect.replace(date, "").strip()
 
         await self.standupRepository.track_standup(standup_message)
+
+        return time_status
 
     async def get_standup_embed(
         self,
@@ -209,43 +226,6 @@ class StandupService:
         except Exception as e:
             print(f"Error registering new standup channel {channel_id}: {e}")
             raise ValueError(f"Failed to register new standup channel: {e}")
-
-    async def is_user_added_to_standup_channel(
-        self, channel_id: int, user_id: int
-    ) -> bool:
-        response = await self.standupRepository.is_user_added_to_standup_channel(
-            channel_id=channel_id, user_id=user_id
-        )
-        return response
-
-    async def add_member_to_standup_channel(
-        self, channel_id: int, user_id: int, user_name: str, created_at: str
-    ) -> None:
-        if await self.is_user_added_to_standup_channel(channel_id, user_id):
-            raise ValueError(
-                f"User <@{user_id}> is already added to standup channel <#{channel_id}>"
-            )
-
-        standup_member = StandupMember(
-            channel_id=str(channel_id),
-            author_id=str(user_id),
-            server_name=user_name,
-            created_at=created_at,
-        )
-
-        await self.standupRepository.add_member_to_standup_channel(standup_member)
-
-    async def remove_member_from_standup_channel(
-        self, channel_id: int, user_id: int
-    ) -> None:
-        if not await self.is_user_added_to_standup_channel(channel_id, user_id):
-            raise ValueError(
-                f"User <@{user_id}> is not in standup channel <#{channel_id}>"
-            )
-
-        await self.standupRepository.remove_member_from_standup_channel(
-            channel_id=channel_id, user_id=user_id
-        )
 
     async def delete_standup_by_message_id(self, message_id: int) -> None:
         response: Optional[StandupMessage] = (

@@ -1,4 +1,5 @@
 import asyncio
+from typing import Optional
 
 import discord
 
@@ -6,7 +7,7 @@ from config import LEAVE_TYPE_MAP, PARTIAL_LEAVE_MAP
 from models import DailyLeaveSummary, LeaveByDateChannel, LeaveInfo, LeaveRequest
 from repositories.leave_repository import LeaveRepository
 from services.gemini_service import GeminiService
-from utils.datetime_utils import get_datetime_now
+from utils.datetime_utils import get_date_now, get_datetime_now
 
 
 class LeaveService:
@@ -25,10 +26,11 @@ class LeaveService:
         response = await self.leave_repository.get_daily_leaves(date)
         return response
 
-    async def get_daily_leaves_embed(self, date: str) -> discord.Embed:
-        response = await self.get_daily_leaves(date)
+    async def get_daily_leaves_embed(
+        self, leaves: list[DailyLeaveSummary], date: str
+    ) -> discord.Embed:
         team_leaves: dict[str, list] = {}
-        for leave in response:
+        for leave in leaves:
             if leave.team_name not in team_leaves:
                 team_leaves[leave.team_name] = []
 
@@ -182,3 +184,18 @@ class LeaveService:
         )
 
         await message.author.send(embed=embed)
+
+    async def update_daily_leave_summary(self, date: Optional[str] = None) -> None:
+        from datacache import DataCache
+
+        if not date:
+            date = get_date_now()
+
+        message = DataCache.daily_leave_summary.get(date)
+        if not message:
+            return
+
+        leaves = await self.get_daily_leaves(date)
+        embed = await self.get_daily_leaves_embed(leaves, date)
+
+        await message.edit(embed=embed)

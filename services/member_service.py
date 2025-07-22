@@ -1,4 +1,4 @@
-from models import MemberTeam
+from models import MemberTeam, StandupMember
 from repositories.member_repository import MemberRepository
 
 
@@ -14,4 +14,41 @@ class MemberService:
     ) -> list[MemberTeam]:
         return await self.member_repository.get_standup_members_by_channelid(
             str(channel_id)
+        )
+
+    async def is_user_added_to_standup_channel(
+        self, channel_id: int, user_id: int
+    ) -> bool:
+        response = await self.member_repository.is_user_added_to_standup_channel(
+            channel_id=channel_id, user_id=user_id
+        )
+        return response
+
+    async def add_member_to_standup_channel(
+        self, channel_id: int, user_id: int, user_name: str, created_at: str
+    ) -> None:
+        if await self.is_user_added_to_standup_channel(channel_id, user_id):
+            raise ValueError(
+                f"User <@{user_id}> is already added to standup channel <#{channel_id}>"
+            )
+
+        standup_member = StandupMember(
+            channel_id=str(channel_id),
+            author_id=str(user_id),
+            server_name=user_name,
+            created_at=created_at,
+        )
+
+        await self.member_repository.add_member_to_standup_channel(standup_member)
+
+    async def remove_member_from_standup_channel(
+        self, channel_id: int, user_id: int
+    ) -> None:
+        if not await self.is_user_added_to_standup_channel(channel_id, user_id):
+            raise ValueError(
+                f"User <@{user_id}> is not in standup channel <#{channel_id}>"
+            )
+
+        await self.member_repository.remove_member_from_standup_channel(
+            channel_id=channel_id, user_id=user_id
         )

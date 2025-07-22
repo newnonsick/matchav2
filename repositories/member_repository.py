@@ -1,7 +1,7 @@
 from supabase import AsyncClient
 
 from db.supabase import SupabaseClient
-from models import MemberTeam
+from models import MemberTeam, StandupMember
 
 
 class MemberRepository:
@@ -27,3 +27,30 @@ class MemberRepository:
             .execute()
         )
         return [MemberTeam(**item) for item in response.data] if response.data else []
+
+    async def add_member_to_standup_channel(
+        self, standup_member: StandupMember
+    ) -> None:
+        client: AsyncClient = await self.supabase_client.get_client()
+        await client.from_("member_team").insert(standup_member.model_dump()).execute()
+
+    async def is_user_added_to_standup_channel(
+        self, channel_id: int, user_id: int
+    ) -> bool:
+        client: AsyncClient = await self.supabase_client.get_client()
+        response = (
+            await client.from_("member_team")
+            .select("author_id")
+            .eq("channel_id", str(channel_id))
+            .eq("author_id", str(user_id))
+            .execute()
+        )
+        return bool(response.data)
+
+    async def remove_member_from_standup_channel(
+        self, channel_id: int, user_id: int
+    ) -> None:
+        client: AsyncClient = await self.supabase_client.get_client()
+        await client.from_("member_team").delete().eq("channel_id", str(channel_id)).eq(
+            "author_id", str(user_id)
+        ).execute()

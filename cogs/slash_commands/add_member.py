@@ -41,7 +41,7 @@ class AddMember(commands.Cog):
             user_name = user.display_name if user.display_name else user.name
             created_at = get_datetime_now()
 
-            await self.client.standup_service.add_member_to_standup_channel(
+            await self.client.member_service.add_member_to_standup_channel(
                 channel_id=channel_id,
                 user_id=user_id,
                 user_name=user_name,

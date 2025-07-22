@@ -5,6 +5,7 @@ from config import IGNORED_BOT_IDS
 from core.custom_bot import CustomBot
 from datacache import DataCache
 from models import LeaveInfo
+from utils.datetime_utils import get_date_now
 from utils.message_utils import clear_bot_reactions
 
 
@@ -21,8 +22,13 @@ class MessagesEvents(commands.Cog):
 
         if message.channel.id in DataCache.STANDUP_CHANNELS:
             try:
-                await self.client.standup_service.track_standup(message, check=False)
-                await message.add_reaction("✅")
+                time_status = await self.client.standup_service.track_standup(
+                    message, check=False
+                )
+                if time_status == "today":
+                    await message.add_reaction("✅")
+                elif time_status == "future":
+                    await message.add_reaction("☑️")
             except ValueError as e:
                 print(f"ValueError: {e}")
                 await message.add_reaction("❌")
@@ -48,6 +54,13 @@ class MessagesEvents(commands.Cog):
             except Exception as e:
                 print(f"Error tracking leave message: {e}")
                 await message.add_reaction("❌")
+
+            leave_date = set(leave.absent_date for leave in leave_request)
+            current_date = get_date_now()
+            if (current_date in DataCache.daily_leave_summary.keys()) and (
+                current_date in leave_date
+            ):
+                await self.client.leave_service.update_daily_leave_summary(current_date)
 
     # @commands.Cog.listener()
     # async def on_message_delete(self, message: discord.Message):
@@ -150,9 +163,14 @@ class MessagesEvents(commands.Cog):
                 await self.client.standup_service.delete_standup_by_message_id(
                     message.id
                 )
-                await self.client.standup_service.track_standup(message, check=False)
+                time_status = await self.client.standup_service.track_standup(
+                    message, check=False
+                )
                 await clear_bot_reactions(message, self.client)
-                await message.add_reaction("✅")
+                if time_status == "today":
+                    await message.add_reaction("✅")
+                elif time_status == "future":
+                    await message.add_reaction("☑️")
             except ValueError as e:
                 print(f"ValueError: {e}")
                 await clear_bot_reactions(message, self.client)
@@ -183,6 +201,8 @@ class MessagesEvents(commands.Cog):
                 print(f"Error tracking leave message: {e}")
                 await clear_bot_reactions(message, self.client)
                 await message.add_reaction("❌")
+
+            await self.client.leave_service.update_daily_leave_summary()
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
@@ -220,6 +240,8 @@ class MessagesEvents(commands.Cog):
                 await self.client.leave_service.delete_leave_by_message_id(message_id)
             except Exception as e:
                 print(f"Error deleting leave message: {e}")
+
+            await self.client.leave_service.update_daily_leave_summary()
 
 
 async def setup(client: CustomBot):

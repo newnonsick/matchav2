@@ -19,18 +19,20 @@ class DailySummarySchedulerCog(commands.Cog):
             self.send_standup, trigger="cron", day_of_week="mon-fri", hour=9, minute=30
         )
         self.scheduler.add_job(
-            self.send_leave, trigger="cron", day_of_week="mon-fri", hour=9, minute=30
+            self.send_leave, trigger="cron", day_of_week="mon-fri", hour=13, minute=55
         )
         self.scheduler.start()
 
     async def send_leave(self):
         date = get_date_now()
-        embed = await self.client.leave_service.get_daily_leaves_embed(date)
+        leaves = await self.client.leave_service.get_daily_leaves(date)
+        embed = await self.client.leave_service.get_daily_leaves_embed(leaves, date)
         channel_id = LEAVE_SUMMARY_CHANNEL_ID
         channel = self.client.get_channel(channel_id)
         if channel and isinstance(channel, discord.TextChannel):
             try:
-                await channel.send(embed=embed)
+                message = await channel.send(embed=embed)
+                DataCache.daily_leave_summary = {date: message}
             except discord.Forbidden:
                 print(f"Cannot send message to channel {channel_id}: Forbidden")
             except Exception as e:
