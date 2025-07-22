@@ -54,3 +54,7 @@ class MemberRepository:
         await client.from_("member_team").delete().eq("channel_id", str(channel_id)).eq(
             "author_id", str(user_id)
         ).execute()
+
+    async def remove_member_from_all_standup_channels(self, user_id: str) -> None:
+        client: AsyncClient = await self.supabase_client.get_client()
+        await client.from_("member_team").delete().eq("author_id", user_id).execute()

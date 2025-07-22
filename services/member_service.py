@@ -52,3 +52,6 @@ class MemberService:
         await self.member_repository.remove_member_from_standup_channel(
             channel_id=channel_id, user_id=user_id
         )
+
+    async def remove_member_from_all_standup_channels(self, user_id: int) -> None:
+        await self.member_repository.remove_member_from_all_standup_channels(str(user_id))
