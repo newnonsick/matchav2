@@ -19,7 +19,7 @@ class DailySummarySchedulerCog(commands.Cog):
             self.send_standup, trigger="cron", day_of_week="mon-fri", hour=9, minute=30
         )
         self.scheduler.add_job(
-            self.send_leave, trigger="cron", day_of_week="mon-fri", hour=13, minute=55
+            self.send_leave, trigger="cron", day_of_week="mon-fri", hour=9, minute=30
         )
         self.scheduler.start()
 
