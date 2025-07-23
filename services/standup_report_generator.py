@@ -5,17 +5,21 @@ import pandas as pd
 import pytz
 from openpyxl.styles import Alignment
 
+from models import UserStandupReport
 from utils.standup_utils import extract_bullet_points
 
 
 class StandupReportGenerator:
-    def generate_report(self, user_name: str, month: str, standups: list) -> BytesIO:
+
+    def generate_report(
+        self, user_name: str, month: str, standups: list[UserStandupReport]
+    ) -> BytesIO:
         data = []
         bangkok_tz = pytz.timezone("Asia/Bangkok")
 
         for standup in standups:
             date_obj_utc = datetime.fromisoformat(
-                standup["timestamp"].replace("Z", "+00:00")
+                standup.timestamp.replace("Z", "+00:00")
             )
             date_obj_bkk = date_obj_utc.astimezone(bangkok_tz)
             datetime_formatted = date_obj_bkk.strftime("%d/%m/%Y %H:%M:%S")
@@ -23,7 +27,7 @@ class StandupReportGenerator:
             data.append(
                 {
                     f"Report {month_formatted}: {user_name}": datetime_formatted,
-                    " ": extract_bullet_points(standup["content"]),
+                    " ": extract_bullet_points(standup.content),
                 }
             )
 

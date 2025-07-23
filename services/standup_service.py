@@ -1,10 +1,18 @@
+import math
 import re
+from datetime import datetime
 from typing import Literal, Optional
 
 import discord
 
 from config import IGNORED_BOT_IDS, LEAVE_TYPE_MAP, PARTIAL_LEAVE_MAP
-from models import LeaveByDateChannel, StandupChannel, StandupMessage, UserStandupReport
+from models import (
+    LeaveByDateChannel,
+    LeaveRequest,
+    StandupChannel,
+    StandupMessage,
+    UserStandupReport,
+)
 from repositories.standup_repository import StandupRepository
 from utils.datetime_utils import (
     combine_date_with_specific_time,
@@ -234,12 +242,88 @@ class StandupService:
         if response:
             await self.standupRepository.delete_standup_by_message_id(str(message_id))
 
-    async def get_standups_by_user_and_month(
+    async def get_standups_by_user_and_datetime(
         self, user_id: int, from_datetime: str, to_datetime: str
     ) -> list[UserStandupReport]:
         response: list[UserStandupReport] = (
-            await self.standupRepository.get_standups_by_user_and_month(
+            await self.standupRepository.get_standups_by_user_and_datetime(
                 str(user_id), from_datetime, to_datetime
             )
         )
         return response
+
+    async def get_monthly_standup_embed(
+        self,
+        user_standup_data: list[UserStandupReport],
+        user_leave_data: list[LeaveRequest],
+        month_weekdays: list[datetime],
+        month: str,
+    ) -> discord.Embed:
+        embed = discord.Embed(
+            title=f"**สรุป Stand-Up ประจำเดือน {month}**", color=discord.Color.blue()
+        )
+
+        monthly_reports: list[str] = []
+
+        for weekday in month_weekdays:
+            date_check_str = weekday.strftime("%Y-%m-%d")
+            date_str = weekday.strftime("%d/%m/%Y")
+            user_standup = next(
+                (
+                    report
+                    for report in user_standup_data
+                    if report.timestamp.startswith(date_check_str)
+                ),
+                None,
+            )
+            user_leave = next(
+                (
+                    leave
+                    for leave in user_leave_data
+                    if leave.absent_date == date_check_str
+                ),
+                None,
+            )
+
+            if user_standup and user_leave:
+                leave_type_display = LEAVE_TYPE_MAP.get(
+                    user_leave.leave_type, "ไม่ระบุประเภท"
+                )
+                partial_leave_display = PARTIAL_LEAVE_MAP.get(
+                    user_leave.partial_leave or "", ""
+                )
+                monthly_reports.append(
+                    f"**{date_str}** ✅ {leave_type_display} {partial_leave_display}"
+                )
+            elif user_standup:
+                monthly_reports.append(f"**{date_str}** ✅")
+            elif user_leave:
+                leave_type_display = LEAVE_TYPE_MAP.get(
+                    user_leave.leave_type, "ไม่ระบุประเภท"
+                )
+                partial_leave_display = PARTIAL_LEAVE_MAP.get(
+                    user_leave.partial_leave or "", ""
+                )
+                monthly_reports.append(
+                    f"**{date_str}** {leave_type_display} {partial_leave_display}"
+                )
+            else:
+                monthly_reports.append(f"**{date_str}** ❌")
+
+        num_weekdays = len(month_weekdays)
+        half_num = math.ceil(num_weekdays / 2)
+
+        batched_reports = [
+            monthly_reports[i : i + half_num]
+            for i in range(0, len(monthly_reports), half_num)
+        ]
+
+        for batch in batched_reports:
+            embed.add_field(
+                name=f"",
+                value="\n".join(batch) if batch else "ไม่มีข้อมูล",
+                inline=True,
+            )
+
+        embed.set_footer(text="Made With ❤️ By TN Backend Min")
+        return embed

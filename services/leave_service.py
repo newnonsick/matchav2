@@ -199,3 +199,10 @@ class LeaveService:
         embed = await self.get_daily_leaves_embed(leaves, date)
 
         await message.edit(embed=embed)
+
+    async def get_leave_by_userid_and_datetime(
+        self, user_id: int, from_datetime: str, to_datetime: str
+    ) -> list[LeaveRequest]:
+        return await self.leave_repository.get_leave_by_userid_and_datetime(
+            user_id=str(user_id), from_datetime=from_datetime, to_datetime=to_datetime
+        )

@@ -3,7 +3,7 @@ from typing import Optional
 from supabase import AsyncClient
 
 from db.supabase import SupabaseClient
-from models import StandupChannel, StandupMessage
+from models import StandupChannel, StandupMessage, UserStandupReport
 
 
 class StandupRepository:
@@ -73,9 +73,9 @@ class StandupRepository:
             "message_id", str(message_id)
         ).execute()
 
-    async def get_standups_by_user_and_month(
+    async def get_standups_by_user_and_datetime(
         self, user_id: str, from_datetime: str, to_datetime: str
-    ) -> list:
+    ) -> list[UserStandupReport]:
         client: AsyncClient = await self.supabase_client.get_client()
         response = (
             await client.from_("message")
@@ -86,4 +86,8 @@ class StandupRepository:
             .order("timestamp", desc=False)
             .execute()
         )
-        return response.data if response.data else []
+        return (
+            [UserStandupReport(**item) for item in response.data]
+            if response.data
+            else []
+        )

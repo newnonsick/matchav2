@@ -1,3 +1,4 @@
+import calendar
 from datetime import datetime, time, timedelta, timezone
 from typing import Literal
 from zoneinfo import ZoneInfo
@@ -46,6 +47,11 @@ def get_datetime_now():
     tz = timezone(timedelta(hours=7))
     now = datetime.now(tz)
     return now.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+def get_month_now():
+    tz = timezone(timedelta(hours=7))
+    now = datetime.now(tz)
+    return now.strftime("%Y-%m")
 
 
 def combine_date_with_current_time(date_str_ddmmyyyy):
@@ -96,6 +102,7 @@ def convert_to_bangkok(dt_utc: datetime) -> datetime:
 
     return dt_utc.astimezone(ZoneInfo("Asia/Bangkok"))
 
+
 def combine_date_with_start_time(date_str_ddmmyyyy: str) -> str:
     tz = timezone(timedelta(hours=7))
 
@@ -108,3 +115,45 @@ def combine_date_with_start_time(date_str_ddmmyyyy: str) -> str:
     combined_dt = datetime.combine(date_part, start_time, tzinfo=tz)
 
     return combined_dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+
+def get_weekdays_in_month(yyyy_mm: str) -> list[datetime]:
+    try:
+        datetime.strptime(yyyy_mm, "%Y-%m")
+    except ValueError:
+        raise ValueError("Invalid month format. Expected YYYY-MM.")
+
+    year, month = map(int, yyyy_mm.split("-"))
+
+    first_day = datetime(year, month, 1)
+    _, num_days = calendar.monthrange(year, month)
+
+    weekdays: list[datetime] = []
+    for day in range(num_days):
+        current_day = first_day + timedelta(days=day)
+        if current_day.weekday() < 5:
+            weekdays.append(current_day)
+
+    return weekdays
+
+
+def get_month_range(
+    month_str: str, timezone_str: str = "Asia/Bangkok"
+) -> tuple[str, str]:
+    tz = ZoneInfo(timezone_str)
+    try:
+        month_start = datetime.strptime(month_str, "%Y-%m").replace(tzinfo=tz)
+    except ValueError:
+        raise ValueError("Invalid month format. Expected YYYY-MM.")
+
+    if month_start.month == 12:
+        next_month = datetime(month_start.year + 1, 1, 1, tzinfo=tz)
+    else:
+        next_month = datetime(month_start.year, month_start.month + 1, 1, tzinfo=tz)
+
+    month_end = next_month - timedelta(days=1)
+
+    from_datetime = month_start.strftime("%Y-%m-%dT%H:%M:%S%z")
+    to_datetime = month_end.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+    return from_datetime, to_datetime

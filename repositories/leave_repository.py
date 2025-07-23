@@ -58,3 +58,19 @@ class LeaveRepository:
     async def delete_leave_by_message_id(self, message_id: str) -> None:
         client: AsyncClient = await self.supabase_client.get_client()
         await client.from_("attendance").delete().eq("message_id", message_id).execute()
+
+    async def get_leave_by_userid_and_datetime(
+        self, user_id: str, from_datetime: str, to_datetime: str
+    ) -> list[LeaveRequest]:
+        client: AsyncClient = await self.supabase_client.get_client()
+        response = (
+            await client.from_("attendance")
+            .select(
+                "absent_date, message_id, created_at, author_id, content, leave_type, partial_leave, channel_id"
+            )
+            .eq("author_id", user_id)
+            .gte("created_at", from_datetime)
+            .lte("created_at", to_datetime)
+            .execute()
+        )
+        return [LeaveRequest(**item) for item in response.data] if response.data else []

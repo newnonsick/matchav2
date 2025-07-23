@@ -9,7 +9,7 @@ from discord.ext import commands
 from core.custom_bot import CustomBot
 from datacache import DataCache
 from models import MemberTeam
-from utils.datetime_utils import is_valid_month_format
+from utils.datetime_utils import get_month_range, is_valid_month_format
 from utils.email_utils import is_valid_email_format
 from utils.file_utils import compress_files_to_zip
 from utils.string_utils import make_name_safe
@@ -75,17 +75,7 @@ class StandupReport(commands.Cog):
                 content=f"Generating stand-up report for {month}..."
             )
 
-            month_start = datetime.strptime(month, "%Y-%m")
-
-            if month_start.month == 12:
-                month_end = datetime(month_start.year + 1, 1, 1) - timedelta(days=1)
-            else:
-                month_end = datetime(
-                    month_start.year, month_start.month + 1, 1
-                ) - timedelta(days=1)
-
-            from_datetime = month_start.strftime("%Y-%m-%dT%H:%M:%S%z")
-            to_datetime = month_end.strftime("%Y-%m-%dT%H:%M:%S%z")
+            from_datetime, to_datetime = get_month_range(month)
 
             target_users: list[MemberTeam] = []
             if user:
@@ -123,7 +113,7 @@ class StandupReport(commands.Cog):
                 target_user_name = target_user.server_name
 
                 user_standups = (
-                    await self.client.standup_service.get_standups_by_user_and_month(
+                    await self.client.standup_service.get_standups_by_user_and_datetime(
                         int(target_user_id), from_datetime, to_datetime
                     )
                 )
