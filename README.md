@@ -9,15 +9,16 @@ Matcha Bot is a versatile Discord bot designed to streamline daily stand-up proc
 *   **Automated Tracking:** Automatically tracks stand-up messages in designated channels, extracting relevant information.
 *   **Daily Summaries:** Sends daily stand-up summaries to team channels, showing who has submitted their stand-up and who hasn't.
 *   **Team Overview:** Provides detailed team overviews for specific dates, including stand-up status and leave information.
-*   **Member Management:** Allows adding and removing members from stand-up tracking.
+*   **Member Management:** Allows adding and removing members from stand-up tracking within a specific channel.
 *   **Stand-Up Reports:** Generates comprehensive Excel reports of user stand-ups for a given month, with options to specify users or channels, and send via email or Discord DM.
+*   **Personal Stand-Up Check:** Allows users to check their own monthly stand-up submission status, including days they were on leave.
 
 ### Leave Management
 
 *   **Automated Tracking:** Automatically identifies and records leave requests from messages using natural language processing (Gemini AI).
 *   **Leave Confirmation:** Sends private confirmation messages to users upon successful leave request submission or edit.
-*   **Leave Deletion Notification:** Notifies users when their leave request messages are deleted.
-*   **Daily Leave Summaries:** Sends daily summaries of all recorded leaves to a designated channel.
+*   **Leave Deletion Handling:** Automatically removes leave records when the original request message is deleted.
+*   **Daily Leave Summaries:** Sends daily summaries of all recorded leaves to a designated channel and updates it in real-time as new leaves are tracked or deleted for the current day.
 
 ### General Utilities
 
@@ -35,6 +36,7 @@ Matcha Bot is a versatile Discord bot designed to streamline daily stand-up proc
 ├── cogs/
 │   ├── client_event/     # Discord gateway event listeners
 │   │   ├── gateway_event.py
+│   │   ├── members_events.py
 │   │   └── messages_events.py
 │   ├── cronjob/          # Scheduled tasks
 │   │   └── daily_summary.py
@@ -42,6 +44,9 @@ Matcha Bot is a versatile Discord bot designed to streamline daily stand-up proc
 │   │   └── announce.py
 │   └── slash_commands/   # Discord slash commands
 │       ├── add_member.py
+│       ├── check_standup.py
+│       ├── help.py
+│       ├── leave_summary.py
 │       ├── register.py
 │       ├── remove_user.py
 │       ├── standup_report.py
@@ -143,10 +148,12 @@ python main.py
 *   `/team [date]`: Displays the stand-up status for the team in the current channel for a specified date (defaults to today).
 *   `/track <message_id>`: Manually tracks a stand-up message if it was missed by the automatic tracking.
 *   `/standup_report <month> [to_email] [user] [team_channel]`: Generates a stand-up report for a given month. Can specify a user or a team channel, and send the report via email or DM.
+*   `/check_standup [month]`: Allows a user to check their own monthly stand-up submission status, including days they were on leave.
 
 ### Leave Commands
 
 *   Leave requests are automatically tracked when messages are sent in designated attendance channels. The bot will analyze the message content using Gemini AI to extract leave details.
+*   `/leave_summary [date]`: Displays a summary of all leaves recorded for a specific date (defaults to today).
 
 ### Admin Commands
 
