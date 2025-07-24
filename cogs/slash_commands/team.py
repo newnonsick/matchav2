@@ -15,7 +15,7 @@ class Team(commands.Cog):
     def __init__(self, client: CustomBot):
         self.client = client
 
-    @app_commands.command(name="team", description="แสดงรายละอียดทีม")
+    @app_commands.command(name="team", description="แสดงรายละเอียดทีม")
     @app_commands.describe(
         hidden="ต้องการซ่อนข้อความนี้หรือไม่",
         date="ระบุวันที่ในรูปแบบ YYYY-MM-DD เพื่อดูข้อมูลของวันนั้น",

@@ -37,3 +37,5 @@ IGNORED_BOT_IDS = [
     CV_TRAINEE_NOTION_STANDUP_BOT_ID,
     PKOB_UXUI_BOT_ID,
 ]
+
+MATCHA_HELP_IMG_URL = "https://qyjhozvrdsghqxjbaldu.supabase.co/storage/v1/object/public/matcha-image//matchaxbotnoi-n.png"
