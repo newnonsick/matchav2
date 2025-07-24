@@ -149,17 +149,17 @@ class MessagesEvents(commands.Cog):
         ):
             return
 
-        message = await channel.fetch_message(message_id)
-        if not message:
-            return
-
-        if (
-            message.author.bot and (message.author.id not in IGNORED_BOT_IDS)
-        ) or not message.guild:
-            return
-
         if channel_id in DataCache.STANDUP_CHANNELS:
             try:
+                message = await channel.fetch_message(message_id)
+                if not message:
+                    return
+
+                if (
+                    message.author.bot and (message.author.id not in IGNORED_BOT_IDS)
+                ) or not message.guild:
+                    return
+
                 await self.client.standup_service.delete_standup_by_message_id(
                     message.id
                 )
@@ -181,6 +181,15 @@ class MessagesEvents(commands.Cog):
                 await message.add_reaction("❌")
         elif channel_id in DataCache.ATTENDANCE_CHANNELS:
             try:
+                message = await channel.fetch_message(message_id)
+                if not message:
+                    return
+
+                if (
+                    message.author.bot and (message.author.id not in IGNORED_BOT_IDS)
+                ) or not message.guild:
+                    return
+
                 await self.client.leave_service.delete_leave_by_message_id(message.id)
                 leave_request: list[LeaveInfo] = (
                     await self.client.leave_service.track_leave(message)
