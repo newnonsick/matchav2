@@ -1,6 +1,6 @@
 # Matcha Bot
 
-Matcha Bot is a versatile Discord bot designed to streamline daily stand-up processes and manage leave requests for teams. It integrates with Supabase for data storage, Gemini for natural language processing, and provides robust reporting capabilities, including email delivery of reports.
+Matcha Bot is a versatile Discord bot designed to streamline daily stand-up processes and manage leave requests for teams. It integrates with Supabase for data storage, Google Gemini for natural language processing, and provides robust reporting capabilities, including email delivery of reports.
 
 ## Features
 
@@ -15,7 +15,7 @@ Matcha Bot is a versatile Discord bot designed to streamline daily stand-up proc
 
 ### Leave Management
 
-*   **Automated Tracking:** Automatically identifies and records leave requests from messages using natural language processing (Gemini AI).
+*   **Automated Tracking:** Automatically identifies and records leave requests from messages using natural language processing (Google Gemini AI).
 *   **Leave Confirmation:** Sends private confirmation messages to users upon successful leave request submission or edit.
 *   **Leave Deletion Handling:** Automatically removes leave records when the original request message is deleted.
 *   **Daily Leave Summaries:** Sends daily summaries of all recorded leaves to a designated channel and updates it in real-time as new leaves are tracked or deleted for the current day.
@@ -56,8 +56,9 @@ Matcha Bot is a versatile Discord bot designed to streamline daily stand-up proc
 │   └── custom_bot.py     # Custom Bot class extending discord.ext.commands.Bot with services/repositories
 ├── db/
 │   ├── migations/        # SQL migration scripts for Supabase
-│   │   ├── 1.sql
-│   │   └── 2.sql
+│   │   ├── 0.sql         # Initial schema setup
+│   │   ├── 1.sql         # Function to get attendance by date and channel
+│   │   └── 2.sql         # Function to get attendance by date across teams
 │   └── supabase.py       # Supabase client initialization and connection
 ├── repositories/         # Data access layer for Supabase
 │   ├── leave_repository.py
@@ -70,16 +71,17 @@ Matcha Bot is a versatile Discord bot designed to streamline daily stand-up proc
 │   ├── member_service.py
 │   ├── standup_report_generator.py
 │   └── standup_service.py
-└── utils/                # Utility functions
-    ├── datetime_utils.py
-    ├── email_utils.py
-    ├── file_utils.py
-    ├── message_utils.py
-    ├── standup_utils.py
-    └── string_utils.py
+├── utils/                # Utility functions
+│   ├── datetime_utils.py
+│   ├── email_utils.py
+│   ├── file_utils.py
+│   ├── message_utils.py
+│   ├── standup_utils.py
+│   └── string_utils.py
 └── views/                # Discord UI views for interactive components
     ├── announce_confirmation_view.py
-    └── delete_message_view.py
+    ├── delete_message_view.py
+    └── help_view.py
 ```
 
 ## Setup
@@ -130,7 +132,7 @@ Matcha Bot is a versatile Discord bot designed to streamline daily stand-up proc
     ```
 
 5.  **Supabase Database Setup:**
-    Execute the SQL migration scripts located in `db/migations/` in your Supabase project to set up the necessary tables and functions (`1.sql`, `2.sql`).
+    Execute the SQL migration scripts located in `db/migations/` in your Supabase project to set up the necessary tables and functions (`0.sql`, `1.sql`, `2.sql`).
 
 ### Running the Bot
 
@@ -152,7 +154,7 @@ python main.py
 
 ### Leave Commands
 
-*   Leave requests are automatically tracked when messages are sent in designated attendance channels. The bot will analyze the message content using Gemini AI to extract leave details.
+*   Leave requests are automatically tracked when messages are sent in designated attendance channels. The bot will analyze the message content using Google Gemini AI to extract leave details.
 *   `/leave_summary [date]`: Displays a summary of all leaves recorded for a specific date (defaults to today).
 
 ### Admin Commands
