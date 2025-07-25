@@ -1,4 +1,5 @@
 import discord
+
 from models import MemberTeam, StandupMember
 from repositories.member_repository import MemberRepository
 
@@ -55,19 +56,20 @@ class MemberService:
         )
 
     async def remove_member_from_all_standup_channels(self, user_id: int) -> None:
-        await self.member_repository.remove_member_from_all_standup_channels(str(user_id))
+        await self.member_repository.remove_member_from_all_standup_channels(
+            str(user_id)
+        )
 
     async def send_standup_removal_notification(
         self, member: discord.User, reason: str
     ) -> None:
         channel = await member.create_dm()
         embed = discord.Embed(
-            title="🚫 Removed from Standup Channel",
+            title="🚫 Removed from Standup",
             description=(
-            f"Hello {member.mention},\n\n"
-            f"You have been **removed** from the standup channel.\n\n"
-            f"**Reason:** {reason}\n\n"
-            "If you believe this was a mistake, please contact a moderator."
+                f"{member.mention}, you've been removed from the standup channel.\n\n"
+                f"**Reason:** {reason}\n\n"
+                "If this seems like a mistake, please contact HR or the Matcha team."
             ),
             color=discord.Color.from_rgb(231, 76, 60),
         )
