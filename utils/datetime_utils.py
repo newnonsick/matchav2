@@ -152,8 +152,28 @@ def get_month_range(
         next_month = datetime(month_start.year, month_start.month + 1, 1, tzinfo=tz)
 
     month_end = next_month - timedelta(days=1)
+    month_end = month_end.replace(hour=23, minute=59, second=59)
 
     from_datetime = month_start.strftime("%Y-%m-%dT%H:%M:%S%z")
     to_datetime = month_end.strftime("%Y-%m-%dT%H:%M:%S%z")
 
     return from_datetime, to_datetime
+
+def get_previous_weekdays(
+    date_str: str, num_days: int = 5
+) -> list[datetime]:
+    try:
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        raise ValueError("Invalid date format. Expected YYYY-MM-DD.")
+
+    weekdays: list[datetime] = []
+    current_date = date_obj
+
+    while len(weekdays) < num_days:
+        if current_date.weekday() < 5:
+            tz = timezone(timedelta(hours=7))
+            weekdays.append(datetime.combine(current_date, time(0, 0, 0), tzinfo=tz))
+        current_date -= timedelta(days=1)
+
+    return weekdays

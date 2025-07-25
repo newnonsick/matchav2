@@ -9,23 +9,32 @@ from config import IGNORED_BOT_IDS, LEAVE_TYPE_MAP, PARTIAL_LEAVE_MAP
 from models import (
     LeaveByDateChannel,
     LeaveRequest,
+    MemberTeam,
     StandupChannel,
     StandupMessage,
     UserStandupReport,
 )
 from repositories.standup_repository import StandupRepository
+from services.leave_service import LeaveService
+from services.member_service import MemberService
 from utils.datetime_utils import (
     combine_date_with_specific_time,
     combine_date_with_start_time,
     compare_date_with_today,
     convert_to_bangkok,
+    get_date_now,
+    get_previous_weekdays,
 )
 
 
 class StandupService:
 
-    def __init__(self, standupRepository: StandupRepository):
+    def __init__(
+        self, standupRepository: StandupRepository, memberService: MemberService, leaveService: LeaveService
+    ):
         self.standupRepository = standupRepository
+        self.memberService = memberService
+        self.leaveService = leaveService
 
     async def get_standup_channel_ids(self) -> list[int]:
         response = await self.standupRepository.get_standup_channel_ids()
@@ -272,7 +281,10 @@ class StandupService:
                 (
                     report
                     for report in user_standup_data
-                    if report.timestamp.startswith(date_check_str)
+                    if convert_to_bangkok(
+                        datetime.fromisoformat(report.timestamp)
+                    ).date()
+                    == weekday.date()
                 ),
                 None,
             )
@@ -327,3 +339,37 @@ class StandupService:
 
         embed.set_footer(text="Made With ❤️ By TN Backend Min")
         return embed
+
+    async def get_members_inactive_standup(self, num_days: int = 5) -> list[MemberTeam]:
+        all_members = await self.memberService.get_all_standup_members()
+        inactive_members: list[MemberTeam] = []
+
+        today = get_date_now()
+        previous_weekdays = get_previous_weekdays(today, num_days=num_days)
+        previous_weekdays[0] = previous_weekdays[0].replace(
+            hour=23, minute=59, second=59
+        )
+
+        from_datetime = previous_weekdays[-1].strftime("%Y-%m-%dT%H:%M:%S%z")
+        to_datetime = previous_weekdays[0].strftime("%Y-%m-%dT%H:%M:%S%z")
+
+        for member in all_members:
+            member_standups = (
+                await self.get_standups_by_user_and_datetime(
+                    user_id=int(member.author_id),
+                    from_datetime=from_datetime,
+                    to_datetime=to_datetime,
+                )
+            )
+
+            if not member_standups:
+                member_leaves = await self.leaveService.get_leave_by_userid_and_datetime(
+                    user_id=int(member.author_id),
+                    from_datetime=from_datetime,
+                    to_datetime=to_datetime,
+                )
+
+                if not member_leaves:
+                    inactive_members.append(member)
+
+        return inactive_members

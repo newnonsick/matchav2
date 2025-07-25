@@ -21,6 +21,13 @@ class DailySummarySchedulerCog(commands.Cog):
         self.scheduler.add_job(
             self.send_leave, trigger="cron", day_of_week="mon-fri", hour=9, minute=30
         )
+        self.scheduler.add_job(
+            self.clear_inactive_standup_members,
+            trigger="cron",
+            day_of_week="mon-fri",
+            hour=18,
+            minute=30,
+        )
         self.scheduler.start()
 
     async def send_leave(self):
@@ -82,6 +89,33 @@ class DailySummarySchedulerCog(commands.Cog):
             await asyncio.gather(*(process_channel(cid) for cid in batch))
             if i + BATCH_SIZE < len(channel_ids):
                 await asyncio.sleep(DELEY_SECONDS)
+
+    async def clear_inactive_standup_members(self):
+        num_days = 5
+        inactive_members = (
+            await self.client.standup_service.get_members_inactive_standup(
+                num_days=num_days
+            )
+        )
+        if not inactive_members:
+            return
+
+        for member in inactive_members:
+            try:
+                await self.client.member_service.remove_member_from_all_standup_channels(
+                    int(member.author_id)
+                )
+                user = await self.client.fetch_user(int(member.author_id))
+                await self.client.member_service.send_standup_removal_notification(
+                    member=user,
+                    reason=f"Inactive for {num_days} days",
+                )
+            except discord.NotFound:
+                print(f"User {member.author_id} not found, possibly deleted.")
+            except discord.Forbidden:
+                print(f"Cannot send DM to {member.server_name}: Forbidden")
+            except Exception as e:
+                print(f"Error removing {member.server_name} from standup: {e}")
 
 
 async def setup(client: CustomBot):

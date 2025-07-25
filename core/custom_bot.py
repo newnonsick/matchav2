@@ -27,11 +27,15 @@ class CustomBot(commands.Bot):
         self.db: SupabaseClient = SupabaseClient(
             SUPABASE_URL=SUPABASE_URL, SUPABASE_KEY=SUPABASE_KEY
         )
-        self.standup_repository = StandupRepository(self.db)
-        self.standup_service = StandupService(self.standup_repository)
+        self.member_repository = MemberRepository(self.db)
+        self.member_service = MemberService(self.member_repository)
         self.leave_repository = LeaveRepository(self.db)
         self.gemini_service = GeminiService(GEMINI_API_KEY)
         self.leave_service = LeaveService(self.leave_repository, self.gemini_service)
+        self.standup_repository = StandupRepository(self.db)
+        self.standup_service = StandupService(
+            self.standup_repository, self.member_service, self.leave_service
+        )
         self.standup_report_generator = StandupReportGenerator()
         self.email_service = EmailService(
             smtp_server=SMTP_SERVER,
@@ -39,8 +43,6 @@ class CustomBot(commands.Bot):
             smtp_username=SMTP_USERNAME,
             smtp_password=SMTP_PASSWORD,
         )
-        self.member_repository = MemberRepository(self.db)
-        self.member_service = MemberService(self.member_repository)
 
     async def close(self):
         # Custom cleanup logic can be added here if needed
