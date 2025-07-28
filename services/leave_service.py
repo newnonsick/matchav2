@@ -8,6 +8,7 @@ from models import DailyLeaveSummary, LeaveByDateChannel, LeaveInfo, LeaveReques
 from repositories.leave_repository import LeaveRepository
 from services.gemini_service import GeminiService
 from utils.datetime_utils import get_date_now, get_datetime_now
+from datetime import datetime
 
 
 class LeaveService:
@@ -200,9 +201,13 @@ class LeaveService:
 
         await message.edit(embed=embed)
 
-    async def get_leave_by_userid_and_datetime(
-        self, user_id: int, from_datetime: str, to_datetime: str
+    async def get_leave_by_userid_and_date(
+        self, user_id: int, from_date: datetime, to_date: datetime
     ) -> list[LeaveRequest]:
-        return await self.leave_repository.get_leave_by_userid_and_datetime(
-            user_id=str(user_id), from_datetime=from_datetime, to_datetime=to_datetime
+        from_date_str = from_date.strftime("%Y-%m-%d")
+        to_date_str = to_date.strftime("%Y-%m-%d")
+        return await self.leave_repository.get_leave_by_userid_and_date(
+            user_id=str(user_id),
+            from_date=from_date_str,
+            to_date=to_date_str,
         )

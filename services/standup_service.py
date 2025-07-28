@@ -25,6 +25,7 @@ from utils.datetime_utils import (
     get_date_now,
     get_previous_weekdays,
 )
+from datetime import datetime
 
 
 class StandupService:
@@ -252,11 +253,13 @@ class StandupService:
             await self.standupRepository.delete_standup_by_message_id(str(message_id))
 
     async def get_standups_by_user_and_datetime(
-        self, user_id: int, from_datetime: str, to_datetime: str
+        self, user_id: int, from_datetime: datetime, to_datetime: datetime
     ) -> list[UserStandupReport]:
+        from_datetime_str = from_datetime.strftime("%Y-%m-%dT%H:%M:%S%z")
+        to_datetime_str = to_datetime.strftime("%Y-%m-%dT%H:%M:%S%z")
         response: list[UserStandupReport] = (
             await self.standupRepository.get_standups_by_user_and_datetime(
-                str(user_id), from_datetime, to_datetime
+                str(user_id), from_datetime_str, to_datetime_str
             )
         )
         return response
@@ -350,8 +353,8 @@ class StandupService:
             hour=23, minute=59, second=59
         )
 
-        from_datetime = previous_weekdays[-1].strftime("%Y-%m-%dT%H:%M:%S%z")
-        to_datetime = previous_weekdays[0].strftime("%Y-%m-%dT%H:%M:%S%z")
+        from_datetime = previous_weekdays[-1]
+        to_datetime = previous_weekdays[0]
 
         for member in all_members:
             member_standups = (
@@ -363,10 +366,10 @@ class StandupService:
             )
 
             if not member_standups:
-                member_leaves = await self.leaveService.get_leave_by_userid_and_datetime(
+                member_leaves = await self.leaveService.get_leave_by_userid_and_date(
                     user_id=int(member.author_id),
-                    from_datetime=from_datetime,
-                    to_datetime=to_datetime,
+                    from_date=from_datetime,
+                    to_date=to_datetime,
                 )
 
                 if not member_leaves:

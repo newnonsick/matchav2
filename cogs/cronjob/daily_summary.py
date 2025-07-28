@@ -25,8 +25,8 @@ class DailySummarySchedulerCog(commands.Cog):
             self.clear_inactive_standup_members,
             trigger="cron",
             day_of_week="mon-fri",
-            hour=18,
-            minute=30,
+            hour=22,
+            minute=45,
         )
         self.scheduler.start()
 

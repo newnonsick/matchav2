@@ -52,10 +52,10 @@ class CheckStandup(commands.Cog):
             )
 
             user_leave_data = (
-                await self.client.leave_service.get_leave_by_userid_and_datetime(
+                await self.client.leave_service.get_leave_by_userid_and_date(
                     user_id=user_id,
-                    from_datetime=from_datetime,
-                    to_datetime=to_datetime,
+                    from_date=from_datetime,
+                    to_date=to_datetime,
                 )
             )
 

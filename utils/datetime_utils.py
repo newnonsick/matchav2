@@ -139,7 +139,7 @@ def get_weekdays_in_month(yyyy_mm: str) -> list[datetime]:
 
 def get_month_range(
     month_str: str, timezone_str: str = "Asia/Bangkok"
-) -> tuple[str, str]:
+) -> tuple[datetime, datetime]:
     tz = ZoneInfo(timezone_str)
     try:
         month_start = datetime.strptime(month_str, "%Y-%m").replace(tzinfo=tz)
@@ -154,10 +154,8 @@ def get_month_range(
     month_end = next_month - timedelta(days=1)
     month_end = month_end.replace(hour=23, minute=59, second=59)
 
-    from_datetime = month_start.strftime("%Y-%m-%dT%H:%M:%S%z")
-    to_datetime = month_end.strftime("%Y-%m-%dT%H:%M:%S%z")
+    return month_start, month_end
 
-    return from_datetime, to_datetime
 
 def get_previous_weekdays(
     date_str: str, num_days: int = 5
