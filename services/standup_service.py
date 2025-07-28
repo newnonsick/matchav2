@@ -66,9 +66,9 @@ class StandupService:
         ]
 
     async def track_standup(
-        self, message: discord.Message, check: bool = True
+        self, message: discord.Message, check_is_exist: bool = True, bypass_check_date: bool = False
     ) -> Literal["today", "future"]:
-        if check:
+        if check_is_exist:
             response = await self.standupRepository.get_standup_by_message_id(
                 str(message.id)
             )
@@ -86,12 +86,13 @@ class StandupService:
                 f"Message with ID {message.id} from {message.author.id} does not contain a valid date in the format DD/MM/YYYY."
             )
 
-        time_status = compare_date_with_today(dates[0])
+        if not bypass_check_date:
+            time_status = compare_date_with_today(dates[0])
 
-        if time_status == "past":
-            raise ValueError(
-                f"Message with ID {message.id} from {message.author.id} contains a date in the past: {dates[0]}."
-            )
+            if time_status == "past":
+                raise ValueError(
+                    f"Message with ID {message.id} from {message.author.id} contains a date in the past: {dates[0]}."
+                )
 
         if message.author.id in IGNORED_BOT_IDS:
             pattern = r"(\S+)\s<@(\d+)>"
@@ -116,12 +117,12 @@ class StandupService:
         message_datetime = message.created_at
 
         date = dates[0]
-        if time_status == "today":
+        if time_status == "future":
+            timestamp = combine_date_with_start_time(date)
+        else:
             timestamp = combine_date_with_specific_time(
                 date, convert_to_bangkok(message_datetime).time()
             )
-        elif time_status == "future":
-            timestamp = combine_date_with_start_time(date)
 
         standup_message = StandupMessage(
             message_id=str(message.id),

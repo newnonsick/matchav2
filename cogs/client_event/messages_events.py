@@ -1,3 +1,5 @@
+import re
+
 import discord
 from discord.ext import commands
 
@@ -5,7 +7,7 @@ from config import IGNORED_BOT_IDS
 from core.custom_bot import CustomBot
 from datacache import DataCache
 from models import LeaveInfo
-from utils.datetime_utils import get_date_now
+from utils.datetime_utils import compare_date_with_today, get_date_now
 from utils.message_utils import clear_bot_reactions
 
 
@@ -23,7 +25,7 @@ class MessagesEvents(commands.Cog):
         if message.channel.id in DataCache.STANDUP_CHANNELS:
             try:
                 time_status = await self.client.standup_service.track_standup(
-                    message, check=False
+                    message, check_is_exist=False
                 )
                 if time_status == "today":
                     await message.add_reaction("✅")
@@ -160,11 +162,27 @@ class MessagesEvents(commands.Cog):
                 ) or not message.guild:
                     return
 
+                pattern = r"\b\d{2}/\d{2}/\d{4}\b"
+                message_content = message.content.strip()
+
+                dates = re.findall(pattern, message_content)
+                if not dates:
+                    raise ValueError(
+                        f"Message with ID {message.id} from {message.author.id} does not contain a valid date in the format DD/MM/YYYY."
+                    )
+
+                time_status = compare_date_with_today(dates[0])
+
+                if time_status == "past":
+                    await clear_bot_reactions(message, self.client)
+                    await message.add_reaction("😶")
+                    return
+
                 await self.client.standup_service.delete_standup_by_message_id(
                     message.id
                 )
                 time_status = await self.client.standup_service.track_standup(
-                    message, check=False
+                    message, check_is_exist=False, bypass_check_date=True
                 )
                 await clear_bot_reactions(message, self.client)
                 if time_status == "today":
@@ -254,4 +272,5 @@ class MessagesEvents(commands.Cog):
 
 
 async def setup(client: CustomBot):
+    await client.add_cog(MessagesEvents(client))
     await client.add_cog(MessagesEvents(client))

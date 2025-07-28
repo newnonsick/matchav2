@@ -41,7 +41,7 @@ class Track(commands.Cog):
             return
 
         try:
-            time_status = await self.client.standup_service.track_standup(message)
+            time_status = await self.client.standup_service.track_standup(message, bypass_check_date=True)
             await clear_bot_reactions(message, self.client)
             if time_status == "today":
                 await message.add_reaction("✅")
