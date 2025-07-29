@@ -4,6 +4,7 @@ from discord.ext import commands
 
 from core.custom_bot import CustomBot
 from datacache import DataCache
+from utils.decorators import is_admin
 
 
 class Register(commands.Cog):
@@ -12,6 +13,7 @@ class Register(commands.Cog):
         self.client = client
 
     @app_commands.command(name="register", description="เพิ่มทีม stand-up")
+    @is_admin()
     async def register(self, interaction: discord.Interaction):
         if not interaction.guild:
             await interaction.response.send_message(

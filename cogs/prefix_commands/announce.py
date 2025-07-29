@@ -5,6 +5,7 @@ from discord.ext import commands
 
 from core.custom_bot import CustomBot
 from datacache import DataCache
+from utils.decorators import is_admin
 from views.announce_confirmation_view import AnnounceConfirmationView
 
 
@@ -13,6 +14,7 @@ class Announce(commands.Cog):
         self.client = client
 
     @commands.command(name="announce")
+    @is_admin()
     async def announce(self, ctx: commands.Context, *, message: str | None = None):
         attachments = ctx.message.attachments
 

@@ -273,4 +273,3 @@ class MessagesEvents(commands.Cog):
 
 async def setup(client: CustomBot):
     await client.add_cog(MessagesEvents(client))
-    await client.add_cog(MessagesEvents(client))

@@ -4,6 +4,7 @@ from discord.ext import commands
 
 from core.custom_bot import CustomBot
 from datacache import DataCache
+from utils.decorators import is_admin
 from utils.message_utils import clear_bot_reactions
 
 
@@ -16,6 +17,7 @@ class Track(commands.Cog):
     @app_commands.describe(
         message_id='ID ของ Stand-up Message ที่ต้องการติดตาม โดยคลิกขวาที่ข้อความแล้วเลือก "Copy Message ID"',
     )
+    @is_admin()
     async def track(self, interaction: discord.Interaction, message_id: str):
         await interaction.response.defer(ephemeral=True)
         if not interaction.guild:

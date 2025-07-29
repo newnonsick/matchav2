@@ -26,6 +26,12 @@ class MemberService:
         )
         return response
 
+    async def is_user_in_any_standup_channel(self, user_id: int) -> bool:
+        response = await self.member_repository.get_standup_channels_by_user_id(
+            str(user_id)
+        )
+        return bool(response)
+
     async def add_member_to_standup_channel(
         self, channel_id: int, user_id: int, user_name: str, created_at: str
     ) -> None:
@@ -75,3 +81,25 @@ class MemberService:
         )
         embed.set_footer(text="Matcha Bot • Stay engaged!")
         await channel.send(embed=embed)
+
+    async def is_admin(self, user_id: int) -> bool:
+        role = await self.member_repository.get_user_role(str(user_id))
+        return role == "admin"
+
+    async def promote_user_to_admin(self, user_id: int) -> None:
+        if not await self.is_user_in_any_standup_channel(user_id):
+            raise ValueError("User must be in at least one standup channel to be promoted.")
+
+        if await self.is_admin(user_id):
+            raise ValueError("User is already an admin.")
+
+        await self.member_repository.update_user_role(str(user_id), "admin")
+
+    async def demote_admin_to_user(self, user_id: int) -> None:
+        if not await self.is_user_in_any_standup_channel(user_id):
+            raise ValueError("User must be in at least one standup channel to be demoted.")
+
+        if not await self.is_admin(user_id):
+            raise ValueError("User is not an admin.")
+
+        await self.member_repository.update_user_role(str(user_id), "user")

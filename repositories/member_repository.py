@@ -1,7 +1,8 @@
+from gotrue import Optional
 from supabase import AsyncClient
 
 from db.supabase import SupabaseClient
-from models import MemberTeam, StandupMember
+from models import MemberTeam, StandupMember, Team
 
 
 class MemberRepository:
@@ -58,3 +59,30 @@ class MemberRepository:
     async def remove_member_from_all_standup_channels(self, user_id: str) -> None:
         client: AsyncClient = await self.supabase_client.get_client()
         await client.from_("member_team").delete().eq("author_id", user_id).execute()
+
+    async def get_user_role(self, user_id: str) -> Optional[str]:
+        client: AsyncClient = await self.supabase_client.get_client()
+        response = (
+            await client.from_("member_team")
+            .select("role")
+            .eq("author_id", user_id)
+            .single()
+            .execute()
+        )
+        return response.data["role"] if response.data else None
+
+    async def update_user_role(self, user_id: str, role: str) -> None:
+        client: AsyncClient = await self.supabase_client.get_client()
+        await client.from_("member_team").update({"role": role}).eq(
+            "author_id", user_id
+        ).execute()
+
+    async def get_standup_channels_by_user_id(self, user_id: str) -> list[Team]:
+        client: AsyncClient = await self.supabase_client.get_client()
+        response = (
+            await client.from_("member_team")
+            .select("team(channel_id, server_id, server_name, team_name)")
+            .eq("author_id", user_id)
+            .execute()
+        )
+        return [Team(**item["team"]) for item in response.data] if response.data else []

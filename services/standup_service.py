@@ -67,7 +67,7 @@ class StandupService:
 
     async def track_standup(
         self, message: discord.Message, check_is_exist: bool = True, bypass_check_date: bool = False
-    ) -> Literal["today", "future"]:
+    ) -> Literal["today", "future", "past"]:
         if check_is_exist:
             response = await self.standupRepository.get_standup_by_message_id(
                 str(message.id)
@@ -86,10 +86,8 @@ class StandupService:
                 f"Message with ID {message.id} from {message.author.id} does not contain a valid date in the format DD/MM/YYYY."
             )
 
-        if not bypass_check_date:
-            time_status = compare_date_with_today(dates[0])
-
-            if time_status == "past":
+        time_status = compare_date_with_today(dates[0])
+        if not bypass_check_date and time_status == "past":
                 raise ValueError(
                     f"Message with ID {message.id} from {message.author.id} contains a date in the past: {dates[0]}."
                 )

@@ -79,3 +79,10 @@ class LeaveInfo(BaseModel):
 
 class LeaveRequestAnalysis(BaseModel):
     leave_request: list[LeaveInfo]
+
+
+class Team(BaseModel):
+    team_name: str
+    server_id: str
+    server_name: str
+    channel_id: str

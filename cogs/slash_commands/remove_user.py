@@ -6,6 +6,7 @@ from discord.ext import commands
 
 from core.custom_bot import CustomBot
 from datacache import DataCache
+from utils.decorators import is_admin
 
 
 class RemoveUser(commands.Cog):
@@ -15,6 +16,7 @@ class RemoveUser(commands.Cog):
 
     @app_commands.command(name="remove_user", description="ลบสมาชิกออกจากช่อง Stand-Up")
     @app_commands.describe(user="สมาชิกที่ต้องการลบออก")
+    @is_admin()
     async def remove_user(
         self,
         interaction: discord.Interaction,

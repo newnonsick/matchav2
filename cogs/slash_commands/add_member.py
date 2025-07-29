@@ -5,6 +5,7 @@ from discord.ext import commands
 from core.custom_bot import CustomBot
 from datacache import DataCache
 from utils.datetime_utils import get_datetime_now
+from utils.decorators import is_admin
 
 
 class AddMember(commands.Cog):
@@ -14,6 +15,7 @@ class AddMember(commands.Cog):
 
     @app_commands.command(name="add_member", description="เพิ่มสมาชิกในทีม Stand-Up")
     @app_commands.describe(user="สมาชิก")
+    @is_admin()
     async def add_member(self, interaction: discord.Interaction, user: discord.User):
         if not interaction.guild:
             await interaction.response.send_message(
