@@ -1,7 +1,7 @@
 import math
 import re
 from datetime import datetime
-from typing import Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional
 
 import discord
 
@@ -14,9 +14,6 @@ from models import (
     StandupMessage,
     UserStandupReport,
 )
-from repositories.standup_repository import StandupRepository
-from services.leave_service import LeaveService
-from services.member_service import MemberService
 from utils.datetime_utils import (
     combine_date_with_specific_time,
     combine_date_with_start_time,
@@ -25,13 +22,20 @@ from utils.datetime_utils import (
     get_date_now,
     get_previous_weekdays,
 )
-from datetime import datetime
+
+if TYPE_CHECKING:
+    from repositories.standup_repository import StandupRepository
+    from services.leave_service import LeaveService
+    from services.member_service import MemberService
 
 
 class StandupService:
 
     def __init__(
-        self, standupRepository: StandupRepository, memberService: MemberService, leaveService: LeaveService
+        self,
+        standupRepository: "StandupRepository",
+        memberService: "MemberService",
+        leaveService: "LeaveService",
     ):
         self.standupRepository = standupRepository
         self.memberService = memberService
@@ -66,7 +70,10 @@ class StandupService:
         ]
 
     async def track_standup(
-        self, message: discord.Message, check_is_exist: bool = True, bypass_check_date: bool = False
+        self,
+        message: discord.Message,
+        check_is_exist: bool = True,
+        bypass_check_date: bool = False,
     ) -> Literal["today", "future", "past"]:
         if check_is_exist:
             response = await self.standupRepository.get_standup_by_message_id(
@@ -88,9 +95,9 @@ class StandupService:
 
         time_status = compare_date_with_today(dates[0])
         if not bypass_check_date and time_status == "past":
-                raise ValueError(
-                    f"Message with ID {message.id} from {message.author.id} contains a date in the past: {dates[0]}."
-                )
+            raise ValueError(
+                f"Message with ID {message.id} from {message.author.id} contains a date in the past: {dates[0]}."
+            )
 
         if message.author.id in IGNORED_BOT_IDS:
             pattern = r"(\S+)\s<@(\d+)>"
@@ -356,12 +363,10 @@ class StandupService:
         to_datetime = previous_weekdays[0]
 
         for member in all_members:
-            member_standups = (
-                await self.get_standups_by_user_and_datetime(
-                    user_id=int(member.author_id),
-                    from_datetime=from_datetime,
-                    to_datetime=to_datetime,
-                )
+            member_standups = await self.get_standups_by_user_and_datetime(
+                user_id=int(member.author_id),
+                from_datetime=from_datetime,
+                to_datetime=to_datetime,
             )
 
             if not member_standups:

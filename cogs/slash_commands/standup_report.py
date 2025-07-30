@@ -1,12 +1,10 @@
-from datetime import datetime, timedelta
 from io import BytesIO
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from core.custom_bot import CustomBot
 from datacache import DataCache
 from models import MemberTeam
 from utils.datetime_utils import get_month_range, is_valid_month_format
@@ -14,10 +12,13 @@ from utils.email_utils import is_valid_email_format
 from utils.file_utils import compress_files_to_zip
 from utils.string_utils import make_name_safe
 
+if TYPE_CHECKING:
+    from core.custom_bot import CustomBot
+
 
 class StandupReport(commands.Cog):
-    def __init__(self, client: CustomBot):
-        self.client: CustomBot = client
+    def __init__(self, client: "CustomBot"):
+        self.client = client
 
     @app_commands.command(
         name="standup_report",
@@ -242,5 +243,5 @@ class StandupReport(commands.Cog):
             )
 
 
-async def setup(client: CustomBot):
+async def setup(client: "CustomBot"):
     await client.add_cog(StandupReport(client))

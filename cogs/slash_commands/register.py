@@ -1,15 +1,19 @@
+from typing import TYPE_CHECKING
+
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from core.custom_bot import CustomBot
 from datacache import DataCache
 from utils.decorators import is_admin
+
+if TYPE_CHECKING:
+    from core.custom_bot import CustomBot
 
 
 class Register(commands.Cog):
 
-    def __init__(self, client: CustomBot):
+    def __init__(self, client: "CustomBot"):
         self.client = client
 
     @app_commands.command(name="register", description="เพิ่มทีม stand-up")
@@ -48,5 +52,5 @@ class Register(commands.Cog):
         )
 
 
-async def setup(client: CustomBot):
+async def setup(client: "CustomBot"):
     await client.add_cog(Register(client))

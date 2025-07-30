@@ -24,14 +24,14 @@ from services.standup_service import StandupService
 class CustomBot(commands.Bot):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.db: SupabaseClient = SupabaseClient(
+        self.db = SupabaseClient(
             SUPABASE_URL=SUPABASE_URL, SUPABASE_KEY=SUPABASE_KEY
         )
         self.member_repository = MemberRepository(self.db)
         self.member_service = MemberService(self.member_repository)
         self.leave_repository = LeaveRepository(self.db)
         self.gemini_service = GeminiService(GEMINI_API_KEY)
-        self.leave_service = LeaveService(self.leave_repository, self.gemini_service)
+        self.leave_service = LeaveService(self.leave_repository, self.gemini_service, self)
         self.standup_repository = StandupRepository(self.db)
         self.standup_service = StandupService(
             self.standup_repository, self.member_service, self.leave_service

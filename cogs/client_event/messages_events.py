@@ -1,18 +1,21 @@
 import re
+from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands
 
 from config import IGNORED_BOT_IDS
-from core.custom_bot import CustomBot
 from datacache import DataCache
 from models import LeaveInfo
 from utils.datetime_utils import compare_date_with_today, get_date_now
 from utils.message_utils import clear_bot_reactions
 
+if TYPE_CHECKING:
+    from core.custom_bot import CustomBot
+
 
 class MessagesEvents(commands.Cog):
-    def __init__(self, client: CustomBot):
+    def __init__(self, client: "CustomBot"):
         self.client = client
 
     @commands.Cog.listener()
@@ -271,5 +274,5 @@ class MessagesEvents(commands.Cog):
             await self.client.leave_service.update_daily_leave_summary()
 
 
-async def setup(client: CustomBot):
+async def setup(client: "CustomBot"):
     await client.add_cog(MessagesEvents(client))

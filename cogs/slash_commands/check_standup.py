@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 import discord
 from discord import app_commands
@@ -12,10 +12,13 @@ from utils.datetime_utils import (
     is_valid_month_format,
 )
 
+if TYPE_CHECKING:
+    from core.custom_bot import CustomBot
+
 
 class CheckStandup(commands.Cog):
-    def __init__(self, client: CustomBot):
-        self.client: CustomBot = client
+    def __init__(self, client: "CustomBot"):
+        self.client = client
 
     @app_commands.command(name="check_standup", description="Check Stand-Up status")
     @app_commands.describe(month="Month to check (YYYY-MM). Default is current month")
@@ -76,5 +79,5 @@ class CheckStandup(commands.Cog):
             )
 
 
-async def setup(client: CustomBot):
+async def setup(client: "CustomBot"):
     await client.add_cog(CheckStandup(client))

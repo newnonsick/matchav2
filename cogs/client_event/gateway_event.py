@@ -1,12 +1,15 @@
+from typing import TYPE_CHECKING
+
 import discord
 from discord.ext import commands
 
-from core.custom_bot import CustomBot
+if TYPE_CHECKING:
+    from core.custom_bot import CustomBot
 
 
 class GatewayEvents(commands.Cog):
 
-    def __init__(self, client: CustomBot):
+    def __init__(self, client: "CustomBot"):
         self.client = client
 
     @commands.Cog.listener()
@@ -27,5 +30,5 @@ class GatewayEvents(commands.Cog):
         print(f"We have logged in as {self.client.user.name}")
 
 
-async def setup(client: CustomBot):
+async def setup(client: "CustomBot"):
     await client.add_cog(GatewayEvents(client))

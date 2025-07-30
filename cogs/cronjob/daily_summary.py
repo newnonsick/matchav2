@@ -1,4 +1,5 @@
 import asyncio
+from typing import TYPE_CHECKING
 
 import discord
 import pytz
@@ -6,13 +7,15 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from discord.ext import commands
 
 from config import LEAVE_SUMMARY_CHANNEL_ID
-from core.custom_bot import CustomBot
 from datacache import DataCache
 from utils.datetime_utils import get_date_now, get_datetime_range
 
+if TYPE_CHECKING:
+    from core.custom_bot import CustomBot
+
 
 class DailySummarySchedulerCog(commands.Cog):
-    def __init__(self, client: CustomBot):
+    def __init__(self, client: "CustomBot"):
         self.client = client
         self.scheduler = AsyncIOScheduler(timezone=pytz.timezone("Asia/Bangkok"))
         self.scheduler.add_job(
@@ -118,5 +121,5 @@ class DailySummarySchedulerCog(commands.Cog):
                 print(f"Error removing {member.server_name} from standup: {e}")
 
 
-async def setup(client: CustomBot):
+async def setup(client: "CustomBot"):
     await client.add_cog(DailySummarySchedulerCog(client))

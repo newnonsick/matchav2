@@ -1,25 +1,25 @@
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from supabase import AsyncClient
-
-from db.supabase import SupabaseClient
 from models import StandupChannel, StandupMessage, UserStandupReport
+
+if TYPE_CHECKING:
+    from db.supabase import SupabaseClient
 
 
 class StandupRepository:
 
-    def __init__(self, supabase_client: SupabaseClient):
-        self.supabase_client: SupabaseClient = supabase_client
+    def __init__(self, supabase_client: "SupabaseClient"):
+        self.supabase_client = supabase_client
 
     async def get_standup_channel_ids(self) -> list:
-        client: AsyncClient = await self.supabase_client.get_client()
+        client = await self.supabase_client.get_client()
         response = await client.from_("team").select("channel_id").execute()
         return response.data if response.data else []
 
     async def get_userid_wrote_standup(
         self, channel_id: int, from_datetime: str, to_datatime: str
     ) -> list:
-        client: AsyncClient = await self.supabase_client.get_client()
+        client = await self.supabase_client.get_client()
         response = (
             await client.from_("message")
             .select("author_id")
@@ -31,7 +31,7 @@ class StandupRepository:
         return response.data if response.data else []
 
     async def userid_in_standup_channel(self, channel_id: int) -> list:
-        client: AsyncClient = await self.supabase_client.get_client()
+        client = await self.supabase_client.get_client()
         response = (
             await client.from_("member_team")
             .select("author_id")
@@ -44,7 +44,7 @@ class StandupRepository:
     async def get_standup_by_message_id(
         self, message_id: str
     ) -> Optional[StandupMessage]:
-        client: AsyncClient = await self.supabase_client.get_client()
+        client = await self.supabase_client.get_client()
         response = (
             await client.from_("message")
             .select(
@@ -60,15 +60,15 @@ class StandupRepository:
         )
 
     async def track_standup(self, standup_message: StandupMessage) -> None:
-        client: AsyncClient = await self.supabase_client.get_client()
+        client = await self.supabase_client.get_client()
         await client.from_("message").insert(standup_message.model_dump()).execute()
 
     async def regis_new_standup_channel(self, standup_channel: StandupChannel) -> None:
-        client: AsyncClient = await self.supabase_client.get_client()
+        client = await self.supabase_client.get_client()
         await client.from_("team").insert(standup_channel.model_dump()).execute()
 
     async def delete_standup_by_message_id(self, message_id: str) -> None:
-        client: AsyncClient = await self.supabase_client.get_client()
+        client = await self.supabase_client.get_client()
         await client.from_("message").delete().eq(
             "message_id", str(message_id)
         ).execute()
@@ -76,7 +76,7 @@ class StandupRepository:
     async def get_standups_by_user_and_datetime(
         self, user_id: str, from_datetime: str, to_datetime: str
     ) -> list[UserStandupReport]:
-        client: AsyncClient = await self.supabase_client.get_client()
+        client = await self.supabase_client.get_client()
         response = (
             await client.from_("message")
             .select("content, timestamp")

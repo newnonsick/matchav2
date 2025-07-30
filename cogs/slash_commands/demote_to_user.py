@@ -1,14 +1,18 @@
+from typing import TYPE_CHECKING
+
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from core.custom_bot import CustomBot
 from utils.decorators import is_admin
+
+if TYPE_CHECKING:
+    from core.custom_bot import CustomBot
 
 
 class DemoteToUser(commands.Cog):
 
-    def __init__(self, client: CustomBot):
+    def __init__(self, client: "CustomBot"):
         self.client = client
 
     @app_commands.command(
@@ -43,5 +47,5 @@ class DemoteToUser(commands.Cog):
         )
 
 
-async def setup(client: CustomBot):
+async def setup(client: "CustomBot"):
     await client.add_cog(DemoteToUser(client))

@@ -1,16 +1,19 @@
 from io import BytesIO
+from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands
 
-from core.custom_bot import CustomBot
 from datacache import DataCache
 from utils.decorators import is_admin
 from views.announce_confirmation_view import AnnounceConfirmationView
 
+if TYPE_CHECKING:
+    from core.custom_bot import CustomBot
+
 
 class Announce(commands.Cog):
-    def __init__(self, client: CustomBot):
+    def __init__(self, client: "CustomBot"):
         self.client = client
 
     @commands.command(name="announce")
@@ -49,5 +52,5 @@ class Announce(commands.Cog):
         )
 
 
-async def setup(client: CustomBot):
+async def setup(client: "CustomBot"):
     await client.add_cog(Announce(client))

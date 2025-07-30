@@ -1,18 +1,20 @@
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from core.custom_bot import CustomBot
 from utils.datetime_utils import get_date_now, is_valid_date_format
 from views.delete_message_view import DeleteMessageView
+
+if TYPE_CHECKING:
+    from core.custom_bot import CustomBot
 
 
 class LeaveSummary(commands.Cog):
 
-    def __init__(self, client: CustomBot):
-        self.client: CustomBot = client
+    def __init__(self, client: "CustomBot"):
+        self.client = client
 
     @app_commands.command(name="leave_summary", description="แสดงสรุปการลา")
     @app_commands.describe(
@@ -52,5 +54,5 @@ class LeaveSummary(commands.Cog):
         )
 
 
-async def setup(client: CustomBot):
+async def setup(client: "CustomBot"):
     await client.add_cog(LeaveSummary(client))

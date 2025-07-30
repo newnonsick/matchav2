@@ -1,6 +1,6 @@
 from functools import wraps
+
 import discord
-from discord import app_commands
 from discord.ext import commands
 
 from core.custom_bot import CustomBot
@@ -13,7 +13,9 @@ def is_admin():
             self, obj: discord.Interaction | commands.Context, *args, **kwargs
         ):
             client: CustomBot | None = None
-            if isinstance(obj, discord.Interaction) and isinstance(obj.client, CustomBot):
+            if isinstance(obj, discord.Interaction) and isinstance(
+                obj.client, CustomBot
+            ):
                 client = obj.client
             elif isinstance(obj, commands.Context) and isinstance(obj.bot, CustomBot):
                 client = obj.bot
@@ -28,7 +30,8 @@ def is_admin():
             if not is_admin:
                 if isinstance(obj, discord.Interaction):
                     await obj.response.send_message(
-                        "You do not have administrative privileges to perform this action.", ephemeral=True
+                        "You do not have administrative privileges to perform this action.",
+                        ephemeral=True,
                     )
                 return
 
@@ -36,4 +39,5 @@ def is_admin():
 
         return wrapper
 
+    return decorator
     return decorator

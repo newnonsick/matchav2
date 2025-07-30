@@ -1,11 +1,15 @@
+from typing import TYPE_CHECKING
+
 import discord
 
 from models import MemberTeam, StandupMember
-from repositories.member_repository import MemberRepository
+
+if TYPE_CHECKING:
+    from repositories.member_repository import MemberRepository
 
 
 class MemberService:
-    def __init__(self, member_repository: MemberRepository):
+    def __init__(self, member_repository: "MemberRepository"):
         self.member_repository = member_repository
 
     async def get_all_standup_members(self) -> list[MemberTeam]:
@@ -88,7 +92,9 @@ class MemberService:
 
     async def promote_user_to_admin(self, user_id: int) -> None:
         if not await self.is_user_in_any_standup_channel(user_id):
-            raise ValueError("User must be in at least one standup channel to be promoted.")
+            raise ValueError(
+                "User must be in at least one standup channel to be promoted."
+            )
 
         if await self.is_admin(user_id):
             raise ValueError("User is already an admin.")
@@ -97,7 +103,9 @@ class MemberService:
 
     async def demote_admin_to_user(self, user_id: int) -> None:
         if not await self.is_user_in_any_standup_channel(user_id):
-            raise ValueError("User must be in at least one standup channel to be demoted.")
+            raise ValueError(
+                "User must be in at least one standup channel to be demoted."
+            )
 
         if not await self.is_admin(user_id):
             raise ValueError("User is not an admin.")

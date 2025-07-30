@@ -1,16 +1,20 @@
+from typing import TYPE_CHECKING
+
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from core.custom_bot import CustomBot
 from datacache import DataCache
 from utils.datetime_utils import get_datetime_now
 from utils.decorators import is_admin
 
+if TYPE_CHECKING:
+    from core.custom_bot import CustomBot
+
 
 class AddMember(commands.Cog):
 
-    def __init__(self, client: CustomBot):
+    def __init__(self, client: "CustomBot"):
         self.client = client
 
     @app_commands.command(name="add_member", description="เพิ่มสมาชิกในทีม Stand-Up")
@@ -58,5 +62,5 @@ class AddMember(commands.Cog):
             await interaction.edit_original_response(content=f"เกิดข้อผิดพลาด: {str(e)}")
 
 
-async def setup(client: CustomBot):
+async def setup(client: "CustomBot"):
     await client.add_cog(AddMember(client))

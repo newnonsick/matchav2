@@ -1,18 +1,18 @@
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from supabase import AsyncClient
-
-from db.supabase import SupabaseClient
 from models import DailyLeaveSummary, LeaveByDateChannel, LeaveRequest
+
+if TYPE_CHECKING:
+    from db.supabase import SupabaseClient
 
 
 class LeaveRepository:
 
-    def __init__(self, supabase_client: SupabaseClient):
-        self.supabase_client: SupabaseClient = supabase_client
+    def __init__(self, supabase_client: "SupabaseClient"):
+        self.supabase_client = supabase_client
 
     async def get_user_inleave(self, channel_id: int, date: str) -> list:
-        client: AsyncClient = await self.supabase_client.get_client()
+        client = await self.supabase_client.get_client()
         response = await client.rpc(
             "get_attendance_by_date_channel",
             {"_date": date, "_channel_id": str(channel_id)},
@@ -24,7 +24,7 @@ class LeaveRepository:
         )
 
     async def get_daily_leaves(self, date: str) -> list[DailyLeaveSummary]:
-        client: AsyncClient = await self.supabase_client.get_client()
+        client = await self.supabase_client.get_client()
         response = await client.rpc(
             "get_attendance_by_date",
             {"target_date": date},
@@ -36,11 +36,11 @@ class LeaveRepository:
         )
 
     async def insert_leave(self, leave_request: LeaveRequest) -> None:
-        client: AsyncClient = await self.supabase_client.get_client()
+        client = await self.supabase_client.get_client()
         await client.from_("attendance").insert(leave_request.model_dump()).execute()
 
     async def get_leave_by_message_id(self, message_id: str) -> Optional[LeaveRequest]:
-        client: AsyncClient = await self.supabase_client.get_client()
+        client = await self.supabase_client.get_client()
         response = (
             await client.from_("attendance")
             .select(
@@ -56,13 +56,13 @@ class LeaveRepository:
         )
 
     async def delete_leave_by_message_id(self, message_id: str) -> None:
-        client: AsyncClient = await self.supabase_client.get_client()
+        client = await self.supabase_client.get_client()
         await client.from_("attendance").delete().eq("message_id", message_id).execute()
 
     async def get_leave_by_userid_and_date(
         self, user_id: str, from_date: str, to_date: str
     ) -> list[LeaveRequest]:
-        client: AsyncClient = await self.supabase_client.get_client()
+        client = await self.supabase_client.get_client()
         response = (
             await client.from_("attendance")
             .select(

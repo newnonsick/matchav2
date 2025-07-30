@@ -1,16 +1,20 @@
+from typing import TYPE_CHECKING
+
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from core.custom_bot import CustomBot
 from datacache import DataCache
 from utils.decorators import is_admin
 from utils.message_utils import clear_bot_reactions
 
+if TYPE_CHECKING:
+    from core.custom_bot import CustomBot
+
 
 class Track(commands.Cog):
 
-    def __init__(self, client: CustomBot):
+    def __init__(self, client: "CustomBot"):
         self.client = client
 
     @app_commands.command(name="track", description="เพิ่มการติดตาม Stand-Up Message")
@@ -43,7 +47,9 @@ class Track(commands.Cog):
             return
 
         try:
-            time_status = await self.client.standup_service.track_standup(message, bypass_check_date=True)
+            time_status = await self.client.standup_service.track_standup(
+                message, bypass_check_date=True
+            )
             await clear_bot_reactions(message, self.client)
             if time_status == "today":
                 await message.add_reaction("✅")
@@ -59,5 +65,5 @@ class Track(commands.Cog):
             print(f"Error tracking stand-up message: {e}")
 
 
-async def setup(client: CustomBot):
+async def setup(client: "CustomBot"):
     await client.add_cog(Track(client))

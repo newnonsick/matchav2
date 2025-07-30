@@ -1,18 +1,20 @@
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from core.custom_bot import CustomBot
 from datacache import DataCache
 from utils.datetime_utils import get_date_now, get_datetime_range, is_valid_date_format
 from views.delete_message_view import DeleteMessageView
 
+if TYPE_CHECKING:
+    from core.custom_bot import CustomBot
+
 
 class Team(commands.Cog):
 
-    def __init__(self, client: CustomBot):
+    def __init__(self, client: "CustomBot"):
         self.client = client
 
     @app_commands.command(name="team", description="แสดงรายละเอียดทีม")
@@ -85,5 +87,5 @@ class Team(commands.Cog):
         )
 
 
-async def setup(client: CustomBot):
+async def setup(client: "CustomBot"):
     await client.add_cog(Team(client))

@@ -1,22 +1,30 @@
 import asyncio
-from typing import Optional
+from datetime import datetime
+from typing import TYPE_CHECKING, Optional
 
 import discord
 
 from config import LEAVE_TYPE_MAP, PARTIAL_LEAVE_MAP
+from datacache import DataCache
 from models import DailyLeaveSummary, LeaveByDateChannel, LeaveInfo, LeaveRequest
-from repositories.leave_repository import LeaveRepository
-from services.gemini_service import GeminiService
 from utils.datetime_utils import get_date_now, get_datetime_now
-from datetime import datetime
+
+if TYPE_CHECKING:
+    from core.custom_bot import CustomBot
+    from repositories.leave_repository import LeaveRepository
+    from services.gemini_service import GeminiService
 
 
 class LeaveService:
     def __init__(
-        self, leave_repository: LeaveRepository, gemini_service: GeminiService
+        self,
+        leave_repository: "LeaveRepository",
+        gemini_service: "GeminiService",
+        client: "CustomBot",
     ):
-        self.leave_repository: LeaveRepository = leave_repository
-        self.gemini_service: GeminiService = gemini_service
+        self.leave_repository = leave_repository
+        self.gemini_service = gemini_service
+        self.client = client
 
     async def get_user_inleave(self, channel_id, date) -> list[LeaveByDateChannel]:
 
@@ -187,7 +195,7 @@ class LeaveService:
         await message.author.send(embed=embed)
 
     async def update_daily_leave_summary(self, date: Optional[str] = None) -> None:
-        from datacache import DataCache
+        # from datacache import DataCache
 
         if not date:
             date = get_date_now()
