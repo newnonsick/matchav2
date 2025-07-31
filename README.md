@@ -1,6 +1,6 @@
 # Matcha Bot
 
-Matcha Bot is a versatile Discord bot designed to streamline daily stand-up processes and manage leave requests for teams. It integrates with Supabase for data storage, Google Gemini for natural language processing, and provides robust reporting capabilities, including email delivery of reports.
+Matcha Bot is a versatile Discord bot designed to streamline daily stand-up processes and manage leave and office entry requests for teams. It integrates with Supabase for data storage, Google Gemini for natural language processing, and provides robust reporting capabilities, including email delivery of reports.
 
 ## Features
 
@@ -9,7 +9,7 @@ Matcha Bot is a versatile Discord bot designed to streamline daily stand-up proc
 *   **Automated Tracking:** Automatically tracks stand-up messages in designated channels, extracting relevant information.
 *   **Daily Summaries:** Sends daily stand-up summaries to team channels, showing who has submitted their stand-up and who hasn't.
 *   **Team Overview:** Provides detailed team overviews for specific dates, including stand-up status and leave information.
-*   **Member Management:** Allows adding and removing members from stand-up tracking within a specific channel.
+*   **Member Management:** Allows adding and removing members from stand-up tracking within a specific channel, and automatically removes inactive members.
 *   **Stand-Up Reports:** Generates comprehensive Excel reports of user stand-ups for a given month, with options to specify users or channels, and send via email or Discord DM.
 *   **Personal Stand-Up Check:** Allows users to check their own monthly stand-up submission status, including days they were on leave.
 
@@ -20,8 +20,14 @@ Matcha Bot is a versatile Discord bot designed to streamline daily stand-up proc
 *   **Leave Deletion Handling:** Automatically removes leave records when the original request message is deleted.
 *   **Daily Leave Summaries:** Sends daily summaries of all recorded leaves to a designated channel and updates it in real-time as new leaves are tracked or deleted for the current day.
 
+### Office Entry Management
+
+*   **Automated Tracking:** Automatically identifies and records office entry confirmations from stand-up messages (specifically, messages containing "เข้าบริษัท").
+*   **Daily Office Entry Summaries:** Sends daily summaries of all recorded office entries to a designated channel and updates it in real-time as new entries are tracked for the current day.
+
 ### General Utilities
 
+*   **Admin Role Management:** Allows privileged users to promote and demote other users' administrative roles within the bot's system.
 *   **Announcements:** Allows privileged users to send announcements to multiple stand-up channels with optional attachments.
 *   **Command Syncing:** Automatically syncs slash commands to Discord upon bot readiness.
 
@@ -45,8 +51,10 @@ Matcha Bot is a versatile Discord bot designed to streamline daily stand-up proc
 │   └── slash_commands/   # Discord slash commands
 │       ├── add_member.py
 │       ├── check_standup.py
+│       ├── demote_to_user.py
 │       ├── help.py
 │       ├── leave_summary.py
+│       ├── promote_to_admin.py
 │       ├── register.py
 │       ├── remove_user.py
 │       ├── standup_report.py
@@ -58,17 +66,22 @@ Matcha Bot is a versatile Discord bot designed to streamline daily stand-up proc
 │   ├── migations/        # SQL migration scripts for Supabase
 │   │   ├── 0.sql         # Initial schema setup
 │   │   ├── 1.sql         # Function to get attendance by date and channel
-│   │   └── 2.sql         # Function to get attendance by date across teams
+│   │   ├── 2.sql         # Function to get attendance by date across teams
+│   │   ├── 3.sql         # Adds user roles (admin/user)
+│   │   ├── 4.sql         # Creates office_entries table
+│   │   └── get_daily_office_entries.sql # Function to get daily office entries
 │   └── supabase.py       # Supabase client initialization and connection
 ├── repositories/         # Data access layer for Supabase
 │   ├── leave_repository.py
 │   ├── member_repository.py
+│   ├── office_entry_repository.py
 │   └── standup_repository.py
 ├── services/             # Business logic and external API interactions
 │   ├── email_service.py
 │   ├── gemini_service.py
 │   ├── leave_service.py
 │   ├── member_service.py
+│   ├── office_entry_service.py
 │   ├── standup_report_generator.py
 │   └── standup_service.py
 ├── utils/                # Utility functions
@@ -122,17 +135,18 @@ Matcha Bot is a versatile Discord bot designed to streamline daily stand-up proc
     SUPABASE_KEY="YOUR_SUPABASE_SERVICE_ROLE_KEY"
     ATTENDANCE_TRAINEE_CHANNEL_ID="YOUR_TRAINEE_ATTENDANCE_CHANNEL_ID"
     ATTENDANCE_EMPLOYEE_CHANNEL_ID="YOUR_EMPLOYEE_ATTENDANCE_CHANNEL_ID"
+    OFFICE_ENTRY_SUMMARY_CHANNEL_ID="YOUR_OFFICE_ENTRY_SUMMARY_CHANNEL_ID"
     LEAVE_SUMMARY_CHANNEL_ID="YOUR_LEAVE_SUMMARY_CHANNEL_ID"
     GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
 
     SMTP_SERVER="YOUR_SMTP_SERVER_ADDRESS"
-    SMTP_PORT="YOUR_SMTP_PORT" # e.g., 465 for SSL (Suport only 465)
+    SMTP_PORT="YOUR_SMTP_PORT" # e.g., 465 for SSL (Support only 465)
     SMTP_USERNAME="YOUR_SMTP_USERNAME"
     SMTP_PASSWORD="YOUR_SMTP_PASSWORD"
     ```
 
 5.  **Supabase Database Setup:**
-    Execute the SQL migration scripts located in `db/migations/` in your Supabase project to set up the necessary tables and functions (`0.sql`, `1.sql`, `2.sql`).
+    Execute the SQL migration scripts located in `db/migations/` in your Supabase project to set up the necessary tables and functions (`0.sql`, `1.sql`, `2.sql`, `3.sql`, `4.sql`, `get_daily_office_entries.sql`).
 
 ### Running the Bot
 
@@ -160,6 +174,8 @@ python main.py
 ### Admin Commands
 
 *   `!announce [message] [attachments]`: Sends an announcement to all registered stand-up channels. (Prefix command)
+*   `/promote_to_admin <user>`: Promotes a user to an admin role within the bot's system.
+*   `/demote_to_user <user>`: Demotes an admin back to a regular user role within the bot's system.
 
 ## Development
 
@@ -178,7 +194,7 @@ To add new commands or event listeners:
 
 ### Database Migrations
 
-When making changes to the database schema, create new `.sql` files in `db/migations/` with incremental numbering (e.g., `3.sql`, `4.sql`).
+When making changes to the database schema, create new `.sql` files in `db/migations/` with incremental numbering (e.g., `5.sql`, `6.sql`). Remember to update the setup instructions in the `README.md` to include new migration files.
 
 ## Contributing
 
