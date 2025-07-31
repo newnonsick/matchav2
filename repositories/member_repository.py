@@ -88,3 +88,21 @@ class MemberRepository:
             .execute()
         )
         return [Team(**item["team"]) for item in response.data] if response.data else []
+
+    async def is_user_exists(self, user_id: str) -> bool:
+        client = await self.supabase_client.get_client()
+        response = (
+            await client.from_("member_team")
+            .select("author_id")
+            .eq("author_id", user_id)
+            .execute()
+        )
+        return bool(response.data)
+
+    async def update_member_display_name(
+        self, user_id: str, new_display_name: str
+    ) -> None:
+        client = await self.supabase_client.get_client()
+        await client.from_("member_team").update({"server_name": new_display_name}).eq(
+            "author_id", user_id
+        ).execute()

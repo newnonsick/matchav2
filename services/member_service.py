@@ -111,3 +111,11 @@ class MemberService:
             raise ValueError("User is not an admin.")
 
         await self.member_repository.update_user_role(str(user_id), "user")
+
+    async def update_member_display_name(self, user_id: int, new_display_name: str) -> None:
+        if not await self.member_repository.is_user_exists(str(user_id)):
+            raise ValueError(f"User with ID {user_id} does not exist.")
+
+        await self.member_repository.update_member_display_name(
+            str(user_id), new_display_name
+        )

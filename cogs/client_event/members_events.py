@@ -17,6 +17,13 @@ class MembersEvents(commands.Cog):
             member.id
         )
 
+    @commands.Cog.listener()
+    async def on_member_update(self, before: discord.Member, after: discord.Member):
+        if before.display_name != after.display_name:
+            await self.client.member_service.update_member_display_name(
+                after.id, after.display_name
+            )
+
 
 async def setup(client: "CustomBot"):
     await client.add_cog(MembersEvents(client))
