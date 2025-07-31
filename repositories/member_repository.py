@@ -67,10 +67,11 @@ class MemberRepository:
             await client.from_("member_team")
             .select("role")
             .eq("author_id", user_id)
-            .single()
             .execute()
         )
-        return response.data["role"] if response.data else None
+        if response.data:
+            return response.data[0].get("role")
+        return None
 
     async def update_user_role(self, user_id: str, role: str) -> None:
         client = await self.supabase_client.get_client()

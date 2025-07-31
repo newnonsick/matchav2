@@ -37,9 +37,14 @@ class MessagesEvents(commands.Cog):
             except ValueError as e:
                 print(f"ValueError: {e}")
                 await message.add_reaction("❌")
+                return
             except Exception as e:
                 print(f"Error tracking stand-up message: {e}")
                 await message.add_reaction("❌")
+                return
+
+            if time_status == "today" and "เข้าบริษัท" in message.content:
+                await self.client.office_entry_service.update_daily_office_entry_summary()
 
         elif message.channel.id in DataCache.ATTENDANCE_CHANNELS:
             try:
@@ -200,6 +205,8 @@ class MessagesEvents(commands.Cog):
                 print(f"Error tracking stand-up message: {e}")
                 await clear_bot_reactions(message, self.client)
                 await message.add_reaction("❌")
+
+            await self.client.office_entry_service.update_daily_office_entry_summary()
         elif channel_id in DataCache.ATTENDANCE_CHANNELS:
             try:
                 message = await channel.fetch_message(message_id)
@@ -264,6 +271,8 @@ class MessagesEvents(commands.Cog):
                 )
             except Exception as e:
                 print(f"Error deleting stand-up message: {e}")
+
+            await self.client.office_entry_service.update_daily_office_entry_summary()
 
         elif channel_id in DataCache.ATTENDANCE_CHANNELS:
             try:

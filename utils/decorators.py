@@ -40,4 +40,3 @@ def is_admin():
         return wrapper
 
     return decorator
-    return decorator

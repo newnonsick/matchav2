@@ -6,7 +6,7 @@ import pytz
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from discord.ext import commands
 
-from config import LEAVE_SUMMARY_CHANNEL_ID
+from config import LEAVE_SUMMARY_CHANNEL_ID, OFFICE_ENTRY_SUMMARY_CHANNEL_ID
 from datacache import DataCache
 from utils.datetime_utils import get_date_now, get_datetime_range
 
@@ -25,11 +25,18 @@ class DailySummarySchedulerCog(commands.Cog):
             self.send_leave, trigger="cron", day_of_week="mon-fri", hour=9, minute=30
         )
         self.scheduler.add_job(
+            self.send_office_entry,
+            trigger="cron",
+            day_of_week="mon-fri",
+            hour=9,
+            minute=30,
+        )
+        self.scheduler.add_job(
             self.clear_inactive_standup_members,
             trigger="cron",
             day_of_week="mon-fri",
-            hour=22,
-            minute=45,
+            hour=18,
+            minute=30,
         )
         self.scheduler.start()
 
@@ -119,6 +126,25 @@ class DailySummarySchedulerCog(commands.Cog):
                 print(f"Cannot send DM to {member.server_name}: Forbidden")
             except Exception as e:
                 print(f"Error removing {member.server_name} from standup: {e}")
+
+    async def send_office_entry(self):
+        date = get_date_now()
+        entries = await self.client.office_entry_service.get_daily_office_entries(date)
+        embed = await self.client.office_entry_service.get_daily_office_entries_embed(
+            entries, date
+        )
+        channel_id = OFFICE_ENTRY_SUMMARY_CHANNEL_ID
+        channel = self.client.get_channel(channel_id)
+        if channel and isinstance(channel, discord.TextChannel):
+            try:
+                message = await channel.send(embed=embed)
+                DataCache.daily_office_entry_summary = {date: message}
+            except discord.Forbidden:
+                print(f"Cannot send message to channel {channel_id}: Forbidden")
+            except Exception as e:
+                print(
+                    f"Error sending office entry summary to channel {channel_id}: {e}"
+                )
 
 
 async def setup(client: "CustomBot"):

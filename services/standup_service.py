@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from repositories.standup_repository import StandupRepository
     from services.leave_service import LeaveService
     from services.member_service import MemberService
+    from services.office_entry_service import OfficeEntryService
 
 
 class StandupService:
@@ -36,10 +37,12 @@ class StandupService:
         standupRepository: "StandupRepository",
         memberService: "MemberService",
         leaveService: "LeaveService",
+        officeEntryService: "OfficeEntryService",
     ):
         self.standupRepository = standupRepository
         self.memberService = memberService
         self.leaveService = leaveService
+        self.officeEntryService = officeEntryService
 
     async def get_standup_channel_ids(self) -> list[int]:
         response = await self.standupRepository.get_standup_channel_ids()
@@ -142,6 +145,13 @@ class StandupService:
         # content = message_contect.replace(date, "").strip()
 
         await self.standupRepository.track_standup(standup_message)
+
+        if "เข้าบริษัท" in message_content:
+            await self.officeEntryService.track_office_entry(
+                author_id=str(user_id),
+                message_id=str(message.id),
+                date=datetime.strptime(date, "%d/%m/%Y").strftime("%Y-%m-%d"),
+            )
 
         return time_status
 

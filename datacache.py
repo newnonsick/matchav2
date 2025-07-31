@@ -16,6 +16,7 @@ class DataCache:
     ]
     STANDUP_CHANNELS: list[int] = []
     daily_leave_summary: dict[str, "Message"] = {}
+    daily_office_entry_summary: dict[str, "Message"] = {}
 
     @classmethod
     async def initialize(cls, client: "CustomBot"):

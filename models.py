@@ -86,3 +86,16 @@ class Team(BaseModel):
     server_id: str
     server_name: str
     channel_id: str
+
+
+class OfficeEntry(BaseModel):
+    author_id: str
+    message_id: Optional[str]
+    date: str
+    created_at: str
+
+
+class DailyOfficeEntrySummary(BaseModel):
+    author_id: str
+    server_name: str
+    team_name: str
