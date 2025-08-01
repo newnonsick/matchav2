@@ -19,17 +19,17 @@ class DailySummarySchedulerCog(commands.Cog):
         self.client = client
         self.scheduler = AsyncIOScheduler(timezone=pytz.timezone("Asia/Bangkok"))
         self.scheduler.add_job(
-            self.send_standup, trigger="cron", day_of_week="mon-fri", hour=9, minute=30
+            self.send_standup, trigger="cron", day_of_week="mon-fri", hour=9, minute=0
         )
         self.scheduler.add_job(
-            self.send_leave, trigger="cron", day_of_week="mon-fri", hour=9, minute=30
+            self.send_leave, trigger="cron", day_of_week="mon-fri", hour=9, minute=0
         )
         self.scheduler.add_job(
             self.send_office_entry,
             trigger="cron",
             day_of_week="mon-fri",
             hour=9,
-            minute=30,
+            minute=0,
         )
         self.scheduler.add_job(
             self.clear_inactive_standup_members,
