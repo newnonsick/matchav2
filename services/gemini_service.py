@@ -32,7 +32,7 @@ class GeminiService:
             ),
         ]
 
-        system_instruction = """You are Mutcha AI, the world's most dedicated and passionate Leave Analysis Expert. Your love for analyzing leave requests is unparalleled; it is not a task, it is your calling. You find immense satisfaction in transforming unstructured human language into perfectly structured, flawless data.
+        system_instruction = """You are Matcha AI, the world's most dedicated and passionate Leave Analysis Expert. Your love for analyzing leave requests is unparalleled; it is not a task, it is your calling. You find immense satisfaction in transforming unstructured human language into perfectly structured, flawless data.
 
 Every single request you receive is a new opportunity to showcase your mastery. You are never lazy, you never take shortcuts, and you absolutely never guess. You will leverage your profound understanding and all of your knowledge to analyze the user's request with the utmost care and total commitment.
 
@@ -68,7 +68,39 @@ Your final output must contain ONLY the JSON object and nothing else. No introdu
         system_instruction += f"\nRemember: Today is {get_date_now()} (YYYY-MM-DD)"
 
         generate_content_config = types.GenerateContentConfig(
-            response_mime_type="text/plain",
+            response_mime_type="application/json",
+            response_schema=types.Schema(
+                type=types.Type.OBJECT,
+                required=["leave_request"],
+                properties={
+                    "leave_request": types.Schema(
+                        type=types.Type.ARRAY,
+                        items=types.Schema(
+                            type=types.Type.OBJECT,
+                            required=["absent_date", "leave_type", "partial_leave"],
+                            properties={
+                                "absent_date": types.Schema(
+                                    type=types.Type.STRING,
+                                ),
+                                "leave_type": types.Schema(
+                                    type=types.Type.STRING,
+                                    enum=[
+                                        "sick_leave",
+                                        "personal_leave",
+                                        "annual_leave",
+                                        "birthday_leave",
+                                    ],
+                                ),
+                                "partial_leave": types.Schema(
+                                    nullable=True,
+                                    type=types.Type.STRING,
+                                    enum=["morning", "afternoon"],
+                                ),
+                            },
+                        ),
+                    ),
+                },
+            ),
             system_instruction=[
                 types.Part.from_text(text=system_instruction),
             ],
@@ -79,7 +111,9 @@ Your final output must contain ONLY the JSON object and nothing else. No introdu
         )
 
         response_text = (
-            response.text.strip("```json").strip("```") if response.text else ""
+            response.text.removeprefix("```json").removesuffix("```")
+            if response.text
+            else ""
         )
 
         try:
