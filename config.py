@@ -39,4 +39,7 @@ IGNORED_BOT_IDS = [
     PKOB_UXUI_BOT_ID,
 ]
 
+PMHEE_USER_ID = 1029245548307419146
+RECEIVED_STANDUP_REMOVAL_NOTIFICATION_USERIDS = [PMHEE_USER_ID]
+
 MATCHA_HELP_IMG_URL = "https://qyjhozvrdsghqxjbaldu.supabase.co/storage/v1/object/public/matcha-image//matchaxbotnoi-n.png"

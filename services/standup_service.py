@@ -1,6 +1,6 @@
 import math
 import re
-from datetime import datetime
+from datetime import date, datetime
 from typing import TYPE_CHECKING, Literal, Optional
 
 import discord
@@ -53,7 +53,7 @@ class StandupService:
         ]
 
     async def get_userid_wrote_standup(
-        self, channel_id: int, from_datetime: str, to_datatime: str
+        self, channel_id: int, from_datetime: datetime, to_datatime: datetime
     ) -> list[int]:
         response = await self.standupRepository.get_userid_wrote_standup(
             channel_id, from_datetime, to_datatime
@@ -96,10 +96,17 @@ class StandupService:
                 f"Message with ID {message.id} from {message.author.id} does not contain a valid date in the format DD/MM/YYYY."
             )
 
-        time_status = compare_date_with_today(dates[0])
+        try:
+            message_date = datetime.strptime(dates[0], "%d/%m/%Y").date()
+        except ValueError:
+            raise ValueError(
+                f"Message with ID {message.id} from {message.author.id} contains an invalid date format: {dates[0]}. Expected format is DD/MM/YYYY."
+            )
+
+        time_status = compare_date_with_today(message_date)
         if not bypass_check_date and time_status == "past":
             raise ValueError(
-                f"Message with ID {message.id} from {message.author.id} contains a date in the past: {dates[0]}."
+                f"Message with ID {message.id} from {message.author.id} contains a date in the past: {message_date}."
             )
 
         if message.author.id in IGNORED_BOT_IDS:
@@ -122,14 +129,13 @@ class StandupService:
                 else user_name
             )
 
-        message_datetime = message.created_at
+        message_datetime = message.edited_at or message.created_at
 
-        date = dates[0]
         if time_status == "future":
-            timestamp = combine_date_with_start_time(date)
+            timestamp = combine_date_with_start_time(message_date)
         else:
             timestamp = combine_date_with_specific_time(
-                date, convert_to_bangkok(message_datetime).time()
+                message_date, convert_to_bangkok(message_datetime).time()
             )
 
         standup_message = StandupMessage(
@@ -139,7 +145,7 @@ class StandupService:
             servername=user_display_name,
             channel_id=str(message.channel.id),
             content=message_content,
-            timestamp=timestamp,
+            timestamp=timestamp.isoformat(),
         )
 
         # content = message_contect.replace(date, "").strip()
@@ -150,7 +156,7 @@ class StandupService:
             await self.officeEntryService.track_office_entry(
                 author_id=str(user_id),
                 message_id=str(message.id),
-                date=datetime.strptime(date, "%d/%m/%Y").strftime("%Y-%m-%d"),
+                date=message_date,
             )
 
         return time_status
@@ -161,7 +167,7 @@ class StandupService:
         userid_in_standup_channel: list[int],
         userid_wrote_standup: list[int],
         channel_id: int,
-        date: str,
+        date: date,
     ) -> discord.Embed:
 
         users_inleave_map = {}
@@ -246,7 +252,7 @@ class StandupService:
         team_name: str,
         server_id: int,
         server_name: str,
-        timestamp: str,
+        timestamp: datetime,
     ) -> None:
         try:
             standup_channel = StandupChannel(
@@ -254,7 +260,7 @@ class StandupService:
                 team_name=team_name,
                 server_id=str(server_id),
                 server_name=server_name,
-                timestamp=timestamp,
+                timestamp=timestamp.isoformat(),
             )
             await self.standupRepository.regis_new_standup_channel(standup_channel)
         except Exception as e:
@@ -271,11 +277,9 @@ class StandupService:
     async def get_standups_by_user_and_datetime(
         self, user_id: int, from_datetime: datetime, to_datetime: datetime
     ) -> list[UserStandupReport]:
-        from_datetime_str = from_datetime.strftime("%Y-%m-%dT%H:%M:%S%z")
-        to_datetime_str = to_datetime.strftime("%Y-%m-%dT%H:%M:%S%z")
         response: list[UserStandupReport] = (
             await self.standupRepository.get_standups_by_user_and_datetime(
-                str(user_id), from_datetime_str, to_datetime_str
+                str(user_id), from_datetime, to_datetime
             )
         )
         return response
@@ -284,7 +288,7 @@ class StandupService:
         self,
         user_standup_data: list[UserStandupReport],
         user_leave_data: list[LeaveRequest],
-        month_weekdays: list[datetime],
+        month_weekdays: list[date],
         month: str,
     ) -> discord.Embed:
         embed = discord.Embed(
@@ -303,7 +307,7 @@ class StandupService:
                     if convert_to_bangkok(
                         datetime.fromisoformat(report.timestamp)
                     ).date()
-                    == weekday.date()
+                    == weekday
                 ),
                 None,
             )

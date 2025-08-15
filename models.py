@@ -99,3 +99,7 @@ class DailyOfficeEntrySummary(BaseModel):
     author_id: str
     server_name: str
     team_name: str
+
+class CompanyHoliday(BaseModel):
+    holiday_date: str
+    description: str

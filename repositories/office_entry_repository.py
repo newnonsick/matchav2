@@ -1,3 +1,4 @@
+from datetime import date
 from typing import TYPE_CHECKING
 
 from models import DailyOfficeEntrySummary, OfficeEntry
@@ -15,12 +16,12 @@ class OfficeEntryRepository:
         await client.from_("office_entries").insert(entry.model_dump()).execute()
 
     async def get_daily_office_entries(
-        self, date: str
+        self, target_date: date
     ) -> list[DailyOfficeEntrySummary]:
         client = await self.supabase_client.get_client()
         response = await client.rpc(
             "get_daily_office_entries",
-            {"target_date": date},
+            {"target_date": target_date.isoformat()},
         ).execute()
         return (
             [DailyOfficeEntrySummary(**item) for item in response.data]
@@ -29,14 +30,14 @@ class OfficeEntryRepository:
         )
 
     async def get_office_entry_by_author_id_and_date(
-        self, author_id: str, date: str
+        self, author_id: str, target_date: date
     ) -> OfficeEntry | None:
         client = await self.supabase_client.get_client()
         response = (
             await client.from_("office_entries")
             .select("author_id, message_id, date, created_at")
             .eq("author_id", author_id)
-            .eq("date", date)
+            .eq("date", target_date.isoformat())
             .limit(1)
             .execute()
         )

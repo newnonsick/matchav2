@@ -6,7 +6,7 @@ from discord.ext import commands
 
 from core.custom_bot import CustomBot
 from utils.datetime_utils import (
-    get_month_now,
+    get_monthstr_now,
     get_month_range,
     get_weekdays_in_month,
     is_valid_month_format,
@@ -34,7 +34,7 @@ class CheckStandup(commands.Cog):
             return
 
         if not month:
-            month = get_month_now()
+            month = get_monthstr_now()
 
         if not is_valid_month_format(month):
             await interaction.edit_original_response(

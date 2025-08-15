@@ -1,4 +1,5 @@
 import copy
+
 from typing import TYPE_CHECKING
 
 from config import ATTENDANCE_EMPLOYEE_CHANNEL_ID, ATTENDANCE_TRAINEE_CHANNEL_ID
@@ -7,6 +8,7 @@ if TYPE_CHECKING:
     from discord import Message
 
     from core.custom_bot import CustomBot
+    from datetime import date
 
 
 class DataCache:
@@ -15,8 +17,8 @@ class DataCache:
         ATTENDANCE_EMPLOYEE_CHANNEL_ID,
     ]
     STANDUP_CHANNELS: list[int] = []
-    daily_leave_summary: dict[str, "Message"] = {}
-    daily_office_entry_summary: dict[str, "Message"] = {}
+    daily_leave_summary: dict["date", "Message"] = {}
+    daily_office_entry_summary: dict["date", "Message"] = {}
 
     @classmethod
     async def initialize(cls, client: "CustomBot"):

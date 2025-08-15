@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 from models import StandupChannel, StandupMessage, UserStandupReport
@@ -17,15 +18,15 @@ class StandupRepository:
         return response.data if response.data else []
 
     async def get_userid_wrote_standup(
-        self, channel_id: int, from_datetime: str, to_datatime: str
+        self, channel_id: int, from_datetime: datetime, to_datatime: datetime
     ) -> list:
         client = await self.supabase_client.get_client()
         response = (
             await client.from_("message")
             .select("author_id")
             .eq("channel_id", channel_id)
-            .gte("timestamp", from_datetime)
-            .lte("timestamp", to_datatime)
+            .gte("timestamp", from_datetime.isoformat())
+            .lte("timestamp", to_datatime.isoformat())
             .execute()
         )
         return response.data if response.data else []
@@ -74,15 +75,15 @@ class StandupRepository:
         ).execute()
 
     async def get_standups_by_user_and_datetime(
-        self, user_id: str, from_datetime: str, to_datetime: str
+        self, user_id: str, from_datetime: datetime, to_datetime: datetime
     ) -> list[UserStandupReport]:
         client = await self.supabase_client.get_client()
         response = (
             await client.from_("message")
             .select("content, timestamp")
             .eq("author_id", user_id)
-            .gte("timestamp", from_datetime)
-            .lte("timestamp", to_datetime)
+            .gte("timestamp", from_datetime.isoformat())
+            .lte("timestamp", to_datetime.isoformat())
             .order("timestamp", desc=False)
             .execute()
         )

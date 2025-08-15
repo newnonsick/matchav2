@@ -1,16 +1,20 @@
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import discord
 
+from config import RECEIVED_STANDUP_REMOVAL_NOTIFICATION_USERIDS
 from models import MemberTeam, StandupMember
 
 if TYPE_CHECKING:
     from repositories.member_repository import MemberRepository
+    from core.custom_bot import CustomBot
 
 
 class MemberService:
-    def __init__(self, member_repository: "MemberRepository"):
+    def __init__(self, member_repository: "MemberRepository", client: "CustomBot"):
         self.member_repository = member_repository
+        self.client = client
 
     async def get_all_standup_members(self) -> list[MemberTeam]:
         return await self.member_repository.get_all_standup_members()
@@ -37,7 +41,7 @@ class MemberService:
         return bool(response)
 
     async def add_member_to_standup_channel(
-        self, channel_id: int, user_id: int, user_name: str, created_at: str
+        self, channel_id: int, user_id: int, user_name: str, created_at: datetime
     ) -> None:
         if await self.is_user_added_to_standup_channel(channel_id, user_id):
             raise ValueError(
@@ -48,7 +52,7 @@ class MemberService:
             channel_id=str(channel_id),
             author_id=str(user_id),
             server_name=user_name,
-            created_at=created_at,
+            created_at=created_at.isoformat(),
         )
 
         await self.member_repository.add_member_to_standup_channel(standup_member)
@@ -85,6 +89,54 @@ class MemberService:
         )
         embed.set_footer(text="Matcha Bot • Stay engaged!")
         await channel.send(embed=embed)
+
+    async def send_standup_removal_to_related_person(
+        self, members: list[MemberTeam], reason: str):
+        send_to_userids = RECEIVED_STANDUP_REMOVAL_NOTIFICATION_USERIDS
+        if not send_to_userids:
+            return
+        embed = discord.Embed(
+            title="Standup Member Removal Notification",
+            description=f"The following members have been removed from standup channels:\n"
+                        f"**Reason:** {reason}\n",
+            color=discord.Color.from_rgb(231, 76, 60),
+        )
+        embed.set_footer(text="Matcha Bot • Standup Management")
+
+        inactive_members = [
+            f"- <@{member.author_id}> ({member.server_name})" for member in members
+        ]
+
+        if not inactive_members:
+            embed.add_field(
+                name="Inactive Members",
+                value="No inactive members found.",
+                inline=False,
+            )
+        else:
+            inactive_members_split = [
+                inactive_members[i : i + 25] for i in range(0, len(inactive_members), 25)
+            ]
+
+            for batch in inactive_members_split:
+                embed.add_field(
+                    name="Inactive Members",
+                    value="\n".join(batch) if batch else "No inactive members found.",
+                    inline=False,
+                )
+
+        embed.set_footer(text="Made with ❤️ by TN Backend Min")
+
+        try:
+            for user_id in send_to_userids:
+                user = self.client.get_user(user_id)
+                if user:
+                    channel = await user.create_dm()
+                    await channel.send(embed=embed)
+        except discord.Forbidden:
+            print(f"Cannot send message to admin channel {channel.id}: Forbidden")
+        except Exception as e:
+            print(f"Error sending standup removal notification: {e}")
 
     async def is_admin(self, user_id: int) -> bool:
         role = await self.member_repository.get_user_role(str(user_id))

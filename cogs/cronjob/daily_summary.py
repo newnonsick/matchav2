@@ -34,7 +34,6 @@ class DailySummarySchedulerCog(commands.Cog):
         self.scheduler.add_job(
             self.clear_inactive_standup_members,
             trigger="cron",
-            day_of_week="mon-fri",
             hour=18,
             minute=30,
         )
@@ -42,21 +41,48 @@ class DailySummarySchedulerCog(commands.Cog):
 
     async def send_leave(self):
         date = get_date_now()
+
+        if await self.client.company_service.is_holiday_date(date):
+            return
+
         leaves = await self.client.leave_service.get_daily_leaves(date)
         embed = await self.client.leave_service.get_daily_leaves_embed(leaves, date)
-        channel_id = LEAVE_SUMMARY_CHANNEL_ID
-        channel = self.client.get_channel(channel_id)
-        if channel and isinstance(channel, discord.TextChannel):
+        if date not in DataCache.daily_leave_summary:
+            channel_id = LEAVE_SUMMARY_CHANNEL_ID
+            channel = self.client.get_channel(channel_id)
+            if channel and isinstance(channel, discord.TextChannel):
+                try:
+                    message = await channel.send(embed=embed)
+                    DataCache.daily_leave_summary = {date: message}
+                except discord.Forbidden:
+                    print(f"Cannot send message to channel {channel_id}: Forbidden")
+                except Exception as e:
+                    print(f"Error sending leave summary to channel {channel_id}: {e}")
+        else:
+            message = DataCache.daily_leave_summary[date]
             try:
-                message = await channel.send(embed=embed)
-                DataCache.daily_leave_summary = {date: message}
-            except discord.Forbidden:
-                print(f"Cannot send message to channel {channel_id}: Forbidden")
-            except Exception as e:
-                print(f"Error sending leave summary to channel {channel_id}: {e}")
+                await message.edit(embed=embed)
+            except discord.NotFound:
+                print(f"Message for date {date} not found, sending new message.")
+                channel_id = LEAVE_SUMMARY_CHANNEL_ID
+                channel = self.client.get_channel(channel_id)
+                if channel and isinstance(channel, discord.TextChannel):
+                    try:
+                        message = await channel.send(embed=embed)
+                        DataCache.daily_leave_summary[date] = message
+                    except discord.Forbidden:
+                        print(f"Cannot send message to channel {channel_id}: Forbidden")
+                    except Exception as e:
+                        print(
+                            f"Error sending leave summary to channel {channel_id}: {e}"
+                        )
 
     async def send_standup(self):
         date = get_date_now()
+
+        if await self.client.company_service.is_holiday_date(date):
+            return
+
         from_datetime, to_datetime = get_datetime_range(date)
 
         channel_ids = DataCache.STANDUP_CHANNELS
@@ -101,6 +127,11 @@ class DailySummarySchedulerCog(commands.Cog):
                 await asyncio.sleep(DELEY_SECONDS)
 
     async def clear_inactive_standup_members(self):
+        date = get_date_now()
+
+        if await self.client.company_service.is_holiday_date(date):
+            return
+
         num_days = 5
         inactive_members = (
             await self.client.standup_service.get_members_inactive_standup(
@@ -127,24 +158,52 @@ class DailySummarySchedulerCog(commands.Cog):
             except Exception as e:
                 print(f"Error removing {member.server_name} from standup: {e}")
 
+        await self.client.member_service.send_standup_removal_to_related_person(
+            members=inactive_members,
+            reason=f"Inactive for {num_days} days",
+        )
+
     async def send_office_entry(self):
         date = get_date_now()
+
+        if await self.client.company_service.is_holiday_date(date):
+            return
+
         entries = await self.client.office_entry_service.get_daily_office_entries(date)
         embed = await self.client.office_entry_service.get_daily_office_entries_embed(
             entries, date
         )
-        channel_id = OFFICE_ENTRY_SUMMARY_CHANNEL_ID
-        channel = self.client.get_channel(channel_id)
-        if channel and isinstance(channel, discord.TextChannel):
+        if date not in DataCache.daily_office_entry_summary:
+            channel_id = OFFICE_ENTRY_SUMMARY_CHANNEL_ID
+            channel = self.client.get_channel(channel_id)
+            if channel and isinstance(channel, discord.TextChannel):
+                try:
+                    message = await channel.send(embed=embed)
+                    DataCache.daily_office_entry_summary = {date: message}
+                except discord.Forbidden:
+                    print(f"Cannot send message to channel {channel_id}: Forbidden")
+                except Exception as e:
+                    print(
+                        f"Error sending office entry summary to channel {channel_id}: {e}"
+                    )
+        else:
+            message = DataCache.daily_office_entry_summary[date]
             try:
-                message = await channel.send(embed=embed)
-                DataCache.daily_office_entry_summary = {date: message}
-            except discord.Forbidden:
-                print(f"Cannot send message to channel {channel_id}: Forbidden")
-            except Exception as e:
-                print(
-                    f"Error sending office entry summary to channel {channel_id}: {e}"
-                )
+                await message.edit(embed=embed)
+            except discord.NotFound:
+                print(f"Message for date {date} not found, sending new message.")
+                channel_id = OFFICE_ENTRY_SUMMARY_CHANNEL_ID
+                channel = self.client.get_channel(channel_id)
+                if channel and isinstance(channel, discord.TextChannel):
+                    try:
+                        message = await channel.send(embed=embed)
+                        DataCache.daily_office_entry_summary[date] = message
+                    except discord.Forbidden:
+                        print(f"Cannot send message to channel {channel_id}: Forbidden")
+                    except Exception as e:
+                        print(
+                            f"Error sending office entry summary to channel {channel_id}: {e}"
+                        )
 
 
 async def setup(client: "CustomBot"):

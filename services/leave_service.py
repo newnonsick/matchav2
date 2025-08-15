@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import date, datetime
 from typing import TYPE_CHECKING, Optional
 
 import discord
@@ -26,17 +26,16 @@ class LeaveService:
         self.gemini_service = gemini_service
         self.client = client
 
-    async def get_user_inleave(self, channel_id, date) -> list[LeaveByDateChannel]:
-
-        response = await self.leave_repository.get_user_inleave(channel_id, date)
+    async def get_user_inleave(self, channel_id: int, date: date) -> list[LeaveByDateChannel]:
+        response = await self.leave_repository.get_user_inleave(str(channel_id), date)
         return response
 
-    async def get_daily_leaves(self, date: str) -> list[DailyLeaveSummary]:
+    async def get_daily_leaves(self, date: date) -> list[DailyLeaveSummary]:
         response = await self.leave_repository.get_daily_leaves(date)
         return response
 
     async def get_daily_leaves_embed(
-        self, leaves: list[DailyLeaveSummary], date: str
+        self, leaves: list[DailyLeaveSummary], date: date
     ) -> discord.Embed:
         team_leaves: dict[str, list] = {}
         for leave in leaves:
@@ -80,6 +79,9 @@ class LeaveService:
         if not leave_request_analyzed:
             raise ValueError("ไม่สามารถวิเคราะห์ข้อความลาได้")
 
+        if not leave_request_analyzed.leave_request:
+            raise ValueError("ไม่มีข้อมูลการลาในข้อความที่วิเคราะห์")
+
         created_at = get_datetime_now()
 
         for leave in leave_request_analyzed.leave_request:
@@ -91,7 +93,7 @@ class LeaveService:
                 leave_type=leave.leave_type,
                 partial_leave=leave.partial_leave,
                 absent_date=leave.absent_date,
-                created_at=created_at,
+                created_at=created_at.isoformat(),
             )
 
             await self.leave_repository.insert_leave(leave_request)
@@ -194,9 +196,7 @@ class LeaveService:
 
         await message.author.send(embed=embed)
 
-    async def update_daily_leave_summary(self, date: Optional[str] = None) -> None:
-        # from datacache import DataCache
-
+    async def update_daily_leave_summary(self, date: Optional[date] = None) -> None:
         if not date:
             date = get_date_now()
 
@@ -212,10 +212,8 @@ class LeaveService:
     async def get_leave_by_userid_and_date(
         self, user_id: int, from_date: datetime, to_date: datetime
     ) -> list[LeaveRequest]:
-        from_date_str = from_date.strftime("%Y-%m-%d")
-        to_date_str = to_date.strftime("%Y-%m-%d")
         return await self.leave_repository.get_leave_by_userid_and_date(
             user_id=str(user_id),
-            from_date=from_date_str,
-            to_date=to_date_str,
+            from_date=from_date,
+            to_date=to_date,
         )

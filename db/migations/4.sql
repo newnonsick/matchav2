@@ -1,11 +1,18 @@
-CREATE TABLE office_entries (
-    id BIGSERIAL PRIMARY KEY,
-    author_id TEXT NOT NULL,
-    message_id TEXT NULL,
-    date DATE NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    UNIQUE (author_id, date),
-    CONSTRAINT fk_message FOREIGN KEY (message_id, author_id)
-        REFERENCES public.message (message_id, author_id)
-        ON DELETE CASCADE
-);
+create or replace function get_daily_office_entries(target_date date)
+returns table (
+  author_id text,
+  server_name text,
+  team_name text
+)
+language sql
+as $$
+  select
+    oe.author_id,
+    mt.server_name,
+    t.team_name
+  from public.office_entries oe
+  join public.member_team mt on oe.author_id = mt.author_id
+  join public.team t on mt.channel_id = t.channel_id
+  where oe.date = target_date
+  order by t.team_name asc, mt.server_name asc;
+$$;

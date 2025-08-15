@@ -1,20 +1,16 @@
-create or replace function get_attendance_by_date(target_date date)
-returns table (
-  author_id text,
-  leave_type text,
-  partial_leave text,
-  team_name text
-)
-language sql
-as $$
-  select
-    a.author_id,
-    a.leave_type,
-    a.partial_leave,
-    t.team_name
-  from public.attendance a
-  join public.member_team mt on a.author_id = mt.author_id 
-  join public.team t on mt.channel_id = t.channel_id
-  where a.absent_date = target_date
-  order by t.team_name asc, mt.server_name asc;
-$$;
+CREATE OR REPLACE FUNCTION get_attendance_by_date_channel(_date date, _channel_id text)
+RETURNS TABLE(
+    author_id text,
+    leave_type leave_type_enum,
+    partial_leave partial_leave_enum,
+    content text
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT a.author_id, a.leave_type, a.partial_leave, a.content
+    FROM attendance a
+    JOIN member_team m ON a.author_id = m.author_id
+    WHERE a.absent_date = _date AND m.channel_id = _channel_id
+    ORDER BY m.server_name asc;
+END;
+$$ LANGUAGE plpgsql STABLE;

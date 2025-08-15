@@ -1,3 +1,4 @@
+from datetime import date
 from typing import TYPE_CHECKING, Optional
 
 import discord
@@ -21,7 +22,7 @@ class OfficeEntryService:
         self.member_repository = member_repository
 
     async def track_office_entry(
-        self, author_id: str, message_id: str, date: str
+        self, author_id: str, message_id: str, date: date
     ) -> None:
         existing_entry = (
             await self.office_entry_repository.get_office_entry_by_author_id_and_date(
@@ -34,18 +35,18 @@ class OfficeEntryService:
         entry = OfficeEntry(
             author_id=author_id,
             message_id=message_id,
-            date=date,
-            created_at=get_datetime_now(),
+            date=date.isoformat(),
+            created_at=get_datetime_now().isoformat(),
         )
         await self.office_entry_repository.insert_office_entry(entry)
 
     async def get_daily_office_entries(
-        self, date: str
+        self, date: date
     ) -> list[DailyOfficeEntrySummary]:
         return await self.office_entry_repository.get_daily_office_entries(date)
 
     async def get_daily_office_entries_embed(
-        self, entries: list[DailyOfficeEntrySummary], date: str
+        self, entries: list[DailyOfficeEntrySummary], date: date
     ) -> discord.Embed:
         embed = discord.Embed(
             title=f"**รายงานการเข้าบริษัท ประจำวันที่ {date}**",
@@ -80,7 +81,7 @@ class OfficeEntryService:
         return embed
 
     async def update_daily_office_entry_summary(
-        self, date: Optional[str] = None
+        self, date: Optional[date] = None
     ) -> None:
 
         if not date:

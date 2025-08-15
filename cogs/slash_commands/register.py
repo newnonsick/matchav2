@@ -44,7 +44,7 @@ class Register(commands.Cog):
             team_name=interaction.channel.name,
             server_id=interaction.guild.id,
             server_name=interaction.guild.name,
-            timestamp=interaction.created_at.isoformat(),
+            timestamp=interaction.created_at,
         )
         DataCache.STANDUP_CHANNELS.append(interaction.channel.id)
         await interaction.edit_original_response(

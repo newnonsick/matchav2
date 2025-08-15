@@ -1,10 +1,11 @@
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils.datetime_utils import get_date_now, is_valid_date_format
+from utils.datetime_utils import get_date_now
 from views.delete_message_view import DeleteMessageView
 
 if TYPE_CHECKING:
@@ -36,16 +37,20 @@ class LeaveSummary(commands.Cog):
             return
 
         if not date:
-            date = get_date_now()
+            target_date = get_date_now()
+        else:
+            try:
+                target_date = datetime.strptime(date, "%Y-%m-%d").date()
+            except ValueError:
+                await interaction.edit_original_response(
+                    content="วันที่ไม่ถูกต้อง กรุณาใช้รูปแบบ YYYY-MM-DD"
+                )
+                return
 
-        if not is_valid_date_format(date):
-            await interaction.edit_original_response(
-                content="วันที่ไม่ถูกต้อง กรุณาใช้รูปแบบ YYYY-MM-DD"
-            )
-            return
-
-        leaves = await self.client.leave_service.get_daily_leaves(date)
-        embed = await self.client.leave_service.get_daily_leaves_embed(leaves, date)
+        leaves = await self.client.leave_service.get_daily_leaves(target_date)
+        embed = await self.client.leave_service.get_daily_leaves_embed(
+            leaves, target_date
+        )
 
         await interaction.edit_original_response(
             content="",

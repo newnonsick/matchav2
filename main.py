@@ -13,8 +13,7 @@ intents.voice_states = True
 intents.message_content = True
 intents.members = True
 
-client = CustomBot(command_prefix="!", intents=intents)
-
+client = CustomBot(command_prefix="!", intents=intents, max_messages=0)
 
 async def load_all_cogs(client: CustomBot):
     for folder in ["client_event", "slash_commands", "prefix_commands", "cronjob"]:

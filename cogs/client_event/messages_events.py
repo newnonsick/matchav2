@@ -1,3 +1,4 @@
+from datetime import datetime
 import re
 from typing import TYPE_CHECKING
 
@@ -179,7 +180,14 @@ class MessagesEvents(commands.Cog):
                         f"Message with ID {message.id} from {message.author.id} does not contain a valid date in the format DD/MM/YYYY."
                     )
 
-                time_status = compare_date_with_today(dates[0])
+                try:
+                    message_date = datetime.strptime(dates[0], "%d/%m/%Y").date()
+                except ValueError:
+                    raise ValueError(
+                        f"Message with ID {message.id} from {message.author.id} contains an invalid date format: {dates[0]}. Expected format is DD/MM/YYYY."
+                    )
+
+                time_status = compare_date_with_today(message_date)
 
                 if time_status == "past":
                     await clear_bot_reactions(message, self.client)

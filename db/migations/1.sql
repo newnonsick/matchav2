@@ -1,16 +1,79 @@
-CREATE OR REPLACE FUNCTION get_attendance_by_date_channel(_date date, _channel_id text)
-RETURNS TABLE(
-    author_id text,
-    leave_type text,
-    partial_leave text,
-    content text
-) AS $$
-BEGIN
-    RETURN QUERY
-    SELECT a.author_id, a.leave_type, a.partial_leave, a.content
-    FROM attendance a
-    JOIN member_team m ON a.author_id = m.author_id
-    WHERE a.absent_date = _date AND m.channel_id = _channel_id
-    ORDER BY m.server_name asc;
-END;
-$$ LANGUAGE plpgsql STABLE;
+CREATE TABLE public.team (
+  channel_id text NOT NULL PRIMARY KEY,
+  team_name text NOT NULL,
+  timestamp timestamp with time zone NOT NULL DEFAULT now(),
+  server_id text NOT NULL,
+  server_name text NOT NULL
+);
+
+CREATE TYPE leave_type_enum AS ENUM (
+  'annual_leave',
+  'sick_leave',
+  'personal_leave',
+  'birthday_leave'
+);
+
+CREATE TYPE partial_leave_enum AS ENUM (
+  'morning',
+  'afternoon'
+);
+
+CREATE TABLE public.attendance (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL UNIQUE,
+  absent_date date NOT NULL,
+  message_id text NOT NULL,
+  channel_id text NOT NULL,
+  content text NOT NULL,
+  leave_type leave_type_enum NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  partial_leave partial_leave_enum,
+  author_id text NOT NULL,
+  CONSTRAINT attendance_pkey PRIMARY KEY (absent_date, message_id, id)
+);
+
+CREATE TYPE user_role AS ENUM ('admin', 'user');
+
+CREATE TABLE public.member_team (
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  role user_role NOT NULL DEFAULT 'user'::user_role,
+  channel_id text NOT NULL,
+  author_id text NOT NULL,
+  server_name text NOT NULL,
+  CONSTRAINT member_team_pkey PRIMARY KEY (channel_id, author_id),
+  FOREIGN KEY (channel_id) REFERENCES public.team(channel_id)
+);
+
+CREATE TABLE public.message (
+  timestamp timestamp with time zone NOT NULL DEFAULT now(),
+  message_id text NOT NULL,
+  author_id text NOT NULL,
+  username text,
+  servername text,
+  channel_id text NOT NULL,
+  content text NOT NULL,
+  CONSTRAINT message_pkey PRIMARY KEY (message_id, author_id),
+  FOREIGN KEY (channel_id) REFERENCES public.team(channel_id)
+);
+
+CREATE TABLE public.office_entries (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  author_id text NOT NULL,
+  message_id text,
+  date date NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  UNIQUE (author_id, date),
+  FOREIGN KEY (message_id, author_id) REFERENCES public.message (message_id, author_id) ON DELETE CASCADE
+);
+
+CREATE TABLE public.company_holidays (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  holiday_date date UNIQUE NOT NULL,
+  description text NOT NULL
+);
+
+ALTER TABLE public.team ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.member_team ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.message ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.attendance ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.office_entry ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.company_holidays ENABLE ROW LEVEL SECURITY;

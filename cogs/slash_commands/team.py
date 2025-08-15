@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 import discord
@@ -5,7 +6,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from datacache import DataCache
-from utils.datetime_utils import get_date_now, get_datetime_range, is_valid_date_format
+from utils.datetime_utils import get_date_now, get_datetime_range
 from views.delete_message_view import DeleteMessageView
 
 if TYPE_CHECKING:
@@ -46,30 +47,31 @@ class Team(commands.Cog):
             await interaction.edit_original_response(content="ช่องนี้ไม่ใช่ช่อง Stand-Up")
             return
 
-        from_datetime = ""
-        to_datetime = ""
-
         if not date:
-            date = get_date_now()
+            target_date = get_date_now()
+        else:
+            try:
+                target_date = datetime.strptime(date, "%Y-%m-%d").date()
+            except ValueError:
+                await interaction.edit_original_response(
+                    content="วันที่ไม่ถูกต้อง กรุณาใช้รูปแบบ YYYY-MM-DD"
+                )
+                return
 
-        if not is_valid_date_format(date):
-            await interaction.edit_original_response(
-                content="วันที่ไม่ถูกต้อง กรุณาใช้รูปแบบ YYYY-MM-DD"
-            )
-            return
-
-        from_datetime, to_datetime = get_datetime_range(date)
+        from_datetime, to_datetime = get_datetime_range(target_date)
 
         userid_wrote_standup = (
             await self.client.standup_service.get_userid_wrote_standup(
                 channel_id, from_datetime, to_datetime
             )
         )
+
         userid_in_standup_channel = (
             await self.client.standup_service.userid_in_standup_channel(channel_id)
         )
+
         user_inleaves = await self.client.leave_service.get_user_inleave(
-            channel_id, date
+            channel_id, target_date
         )
 
         embed = await self.client.standup_service.get_standup_embed(
@@ -77,7 +79,7 @@ class Team(commands.Cog):
             userid_in_standup_channel=userid_in_standup_channel,
             userid_wrote_standup=userid_wrote_standup,
             channel_id=channel_id,
-            date=date,
+            date=target_date,
         )
 
         await interaction.edit_original_response(
