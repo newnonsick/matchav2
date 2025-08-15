@@ -122,7 +122,7 @@ class MemberService:
                 embed.add_field(
                     name="Inactive Members",
                     value="\n".join(batch) if batch else "No inactive members found.",
-                    inline=False,
+                    inline=True,
                 )
 
         embed.set_footer(text="Made with ❤️ by TN Backend Min")
