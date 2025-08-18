@@ -44,4 +44,4 @@ RECEIVED_STANDUP_REMOVAL_NOTIFICATION_USERIDS = [PMHEE_USER_ID]
 
 MATCHA_HELP_IMG_URL = "https://qyjhozvrdsghqxjbaldu.supabase.co/storage/v1/object/public/matcha-image//matchaxbotnoi-n.png"
 
-ENTRY_OFFICE_KEYWORDS = ["เข้าออฟฟิศ", "เข้าบริษัท", "เข้า office", "office", "onsite ออฟฟิศ"]
+ENTRY_OFFICE_KEYWORDS = ["เข้าออฟฟิศ", "เข้าบริษัท", "เข้า office", "office", "onsite ออฟฟิศ"] # Only lowercase keywords

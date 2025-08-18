@@ -29,7 +29,7 @@ class DailySummarySchedulerCog(commands.Cog):
             trigger="cron",
             day_of_week="mon-fri",
             hour=9,
-            minute=40,
+            minute=0,
         )
         self.scheduler.add_job(
             self.clear_inactive_standup_members,
