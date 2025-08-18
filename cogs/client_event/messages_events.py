@@ -8,6 +8,7 @@ from discord.ext import commands
 from config import IGNORED_BOT_IDS
 from datacache import DataCache
 from models import LeaveInfo
+from utils.company_utils import isStandUpMessageEntryOffice
 from utils.datetime_utils import compare_date_with_today, get_date_now
 from utils.message_utils import clear_bot_reactions
 
@@ -44,7 +45,7 @@ class MessagesEvents(commands.Cog):
                 await message.add_reaction("❌")
                 return
 
-            if time_status == "today" and "เข้าบริษัท" in message.content:
+            if time_status == "today" and isStandUpMessageEntryOffice(message.content):
                 await self.client.office_entry_service.update_daily_office_entry_summary()
 
         elif message.channel.id in DataCache.ATTENDANCE_CHANNELS:

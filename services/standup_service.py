@@ -14,6 +14,7 @@ from models import (
     StandupMessage,
     UserStandupReport,
 )
+from utils.company_utils import isStandUpMessageEntryOffice
 from utils.datetime_utils import (
     combine_date_with_specific_time,
     combine_date_with_start_time,
@@ -152,7 +153,7 @@ class StandupService:
 
         await self.standupRepository.track_standup(standup_message)
 
-        if "เข้าบริษัท" in message_content:
+        if isStandUpMessageEntryOffice(message_content):
             await self.officeEntryService.track_office_entry(
                 author_id=str(user_id),
                 message_id=str(message.id),
