@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Literal, Optional
 
 import discord
 
-from config import IGNORED_BOT_IDS, LEAVE_TYPE_MAP, PARTIAL_LEAVE_MAP
+from config import ENTRY_OFFICE_KEYWORDS, IGNORED_BOT_IDS, LEAVE_TYPE_MAP, PARTIAL_LEAVE_MAP
 from models import (
     LeaveByDateChannel,
     LeaveRequest,
@@ -14,7 +14,6 @@ from models import (
     StandupMessage,
     UserStandupReport,
 )
-from utils.company_utils import isStandUpMessageEntryOffice
 from utils.datetime_utils import (
     combine_date_with_specific_time,
     combine_date_with_start_time,
@@ -44,6 +43,12 @@ class StandupService:
         self.memberService = memberService
         self.leaveService = leaveService
         self.officeEntryService = officeEntryService
+
+    def is_standup_message_entry_office(self, text: str) -> bool:
+        text_lower = text.lower()
+        tasks = re.findall(r"-\s*(.*)", text_lower)
+
+        return any(keyword in tasks for keyword in ENTRY_OFFICE_KEYWORDS)
 
     async def get_standup_channel_ids(self) -> list[int]:
         response = await self.standupRepository.get_standup_channel_ids()
@@ -146,14 +151,14 @@ class StandupService:
             servername=user_display_name,
             channel_id=str(message.channel.id),
             content=message_content,
-            timestamp=timestamp.isoformat(),
+            timestamp=timestamp,
         )
 
         # content = message_contect.replace(date, "").strip()
 
         await self.standupRepository.track_standup(standup_message)
 
-        if isStandUpMessageEntryOffice(message_content):
+        if self.is_standup_message_entry_office(message_content):
             await self.officeEntryService.track_office_entry(
                 author_id=str(user_id),
                 message_id=str(message.id),
@@ -261,7 +266,7 @@ class StandupService:
                 team_name=team_name,
                 server_id=str(server_id),
                 server_name=server_name,
-                timestamp=timestamp.isoformat(),
+                timestamp=timestamp,
             )
             await self.standupRepository.regis_new_standup_channel(standup_channel)
         except Exception as e:
@@ -273,7 +278,7 @@ class StandupService:
             await self.standupRepository.get_standup_by_message_id(str(message_id))
         )
         if response:
-            await self.standupRepository.delete_standup_by_message_id(str(message_id))
+            await self.standupRepository.delete_standup_by_message_id(message_id)
 
     async def get_standups_by_user_and_datetime(
         self, user_id: int, from_datetime: datetime, to_datetime: datetime
@@ -299,25 +304,19 @@ class StandupService:
         monthly_reports: list[str] = []
 
         for weekday in month_weekdays:
-            date_check_str = weekday.strftime("%Y-%m-%d")
             date_str = weekday.strftime("%d/%m/%Y")
             user_standup = next(
                 (
                     report
                     for report in user_standup_data
-                    if convert_to_bangkok(
-                        datetime.fromisoformat(report.timestamp)
+                    if convert_to_bangkok(report.timestamp
                     ).date()
                     == weekday
                 ),
                 None,
             )
             user_leave = next(
-                (
-                    leave
-                    for leave in user_leave_data
-                    if leave.absent_date == date_check_str
-                ),
+                (leave for leave in user_leave_data if leave.absent_date == weekday),
                 None,
             )
 

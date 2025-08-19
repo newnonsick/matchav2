@@ -93,7 +93,7 @@ class LeaveService:
                 leave_type=leave.leave_type,
                 partial_leave=leave.partial_leave,
                 absent_date=leave.absent_date,
-                created_at=created_at.isoformat(),
+                created_at=created_at,
             )
 
             await self.leave_repository.insert_leave(leave_request)

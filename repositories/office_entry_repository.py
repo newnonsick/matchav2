@@ -4,43 +4,66 @@ from typing import TYPE_CHECKING
 from models import DailyOfficeEntrySummary, OfficeEntry
 
 if TYPE_CHECKING:
-    from db.supabase import SupabaseClient
+    from db.asyncpg_client import AsyncpgClient
 
 
 class OfficeEntryRepository:
-    def __init__(self, supabase_client: "SupabaseClient"):
-        self.supabase_client = supabase_client
+    def __init__(self, asyncpg_client: "AsyncpgClient"):
+        self.asyncpg_client = asyncpg_client
 
     async def insert_office_entry(self, entry: OfficeEntry):
-        client = await self.supabase_client.get_client()
-        await client.from_("office_entries").insert(entry.model_dump()).execute()
+        conn = None
+        try:
+            conn = await self.asyncpg_client.get_connection()
+            await conn.execute(
+                """
+                INSERT INTO office_entries (author_id, message_id, date, created_at)
+                VALUES ($1, $2, $3, $4)
+                ON CONFLICT (author_id, date) DO NOTHING
+                """,
+                entry.author_id,
+                entry.message_id,
+                entry.date,
+                entry.created_at,
+            )
+        finally:
+            if conn:
+                await self.asyncpg_client.release_connection(conn)
 
     async def get_daily_office_entries(
         self, target_date: date
     ) -> list[DailyOfficeEntrySummary]:
-        client = await self.supabase_client.get_client()
-        response = await client.rpc(
-            "get_daily_office_entries",
-            {"target_date": target_date.isoformat()},
-        ).execute()
-        return (
-            [DailyOfficeEntrySummary(**item) for item in response.data]
-            if response.data
-            else []
-        )
+        conn = None
+        try:
+            conn = await self.asyncpg_client.get_connection()
+            rows = await conn.fetch(
+                "SELECT author_id, server_name, team_name FROM get_daily_office_entries($1)",
+                target_date,
+            )
+            return (
+                [DailyOfficeEntrySummary(**dict(row)) for row in rows] if rows else []
+            )
+        finally:
+            if conn:
+                await self.asyncpg_client.release_connection(conn)
 
     async def get_office_entry_by_author_id_and_date(
         self, author_id: str, target_date: date
     ) -> OfficeEntry | None:
-        client = await self.supabase_client.get_client()
-        response = (
-            await client.from_("office_entries")
-            .select("author_id, message_id, date, created_at")
-            .eq("author_id", author_id)
-            .eq("date", target_date.isoformat())
-            .limit(1)
-            .execute()
-        )
-        if response.data:
-            return OfficeEntry(**response.data[0])
-        return None
+        conn = None
+        try:
+            conn = await self.asyncpg_client.get_connection()
+            row = await conn.fetchrow(
+                """
+                SELECT author_id, message_id, date, created_at
+                FROM office_entries
+                WHERE author_id = $1 AND date = $2
+                LIMIT 1
+                """,
+                author_id,
+                target_date,
+            )
+            return OfficeEntry(**dict(row)) if row else None
+        finally:
+            if conn:
+                await self.asyncpg_client.release_connection(conn)

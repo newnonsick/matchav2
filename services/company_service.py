@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
-from datetime import date
+from datetime import date, datetime
+
 
 if TYPE_CHECKING:
     from core.custom_bot import CustomBot
@@ -14,3 +15,11 @@ class CompanyService:
     async def is_holiday_date(self, date: date) -> bool:
         holiday = await self.companyRepository.get_holiday_date_by_date(date)
         return holiday is not None
+
+    async def get_holiday_days(
+        self, from_datetime: datetime, to_datetime: datetime
+    ) -> list[date]:
+        holidays = await self.companyRepository.get_holidays_by_date_range(
+            from_date=from_datetime, to_date=to_datetime
+        )
+        return [holiday.holiday_date for holiday in holidays]

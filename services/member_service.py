@@ -52,7 +52,7 @@ class MemberService:
             channel_id=str(channel_id),
             author_id=str(user_id),
             server_name=user_name,
-            created_at=created_at.isoformat(),
+            created_at=created_at,
         )
 
         await self.member_repository.add_member_to_standup_channel(standup_member)

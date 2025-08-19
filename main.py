@@ -30,12 +30,9 @@ async def load_all_cogs(client: CustomBot):
 
 async def main():
     async with client:
-        supabase_client = await client.db.connect()
+        await client.db.connect()
         await load_all_cogs(client)
-        if supabase_client is None:
-            print("Failed to connect to Supabase.")
-            return
-        print("Connected to Supabase successfully.")
+        print("Connected to PostgreSQL successfully.")
         await DataCache.initialize(client)
         await client.start(BOT_TOKEN)
 

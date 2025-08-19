@@ -1,3 +1,4 @@
+from datetime import date, datetime
 from typing import Literal, Optional
 
 from pydantic import BaseModel
@@ -8,7 +9,7 @@ class StandupChannel(BaseModel):
     team_name: str
     server_id: str
     server_name: str
-    timestamp: str
+    timestamp: datetime
 
 
 class StandupMessage(BaseModel):
@@ -18,14 +19,14 @@ class StandupMessage(BaseModel):
     servername: str
     channel_id: str
     content: str
-    timestamp: str
+    timestamp: datetime
 
 
 class StandupMember(BaseModel):
     channel_id: str
     author_id: str
     server_name: str
-    created_at: str
+    created_at: datetime
 
 
 class LeaveRequest(BaseModel):
@@ -37,8 +38,8 @@ class LeaveRequest(BaseModel):
         "annual_leave", "sick_leave", "personal_leave", "birthday_leave"
     ]
     partial_leave: Optional[Literal["morning", "afternoon", "fullday"]]
-    absent_date: str
-    created_at: str
+    absent_date: date
+    created_at: datetime
 
 
 class DailyLeaveSummary(BaseModel):
@@ -61,7 +62,7 @@ class LeaveByDateChannel(BaseModel):
 
 class UserStandupReport(BaseModel):
     content: str
-    timestamp: str
+    timestamp: datetime
 
 
 class MemberTeam(BaseModel):
@@ -70,7 +71,7 @@ class MemberTeam(BaseModel):
 
 
 class LeaveInfo(BaseModel):
-    absent_date: str
+    absent_date: date
     leave_type: Literal[
         "annual_leave", "sick_leave", "personal_leave", "birthday_leave"
     ]
@@ -91,8 +92,8 @@ class Team(BaseModel):
 class OfficeEntry(BaseModel):
     author_id: str
     message_id: Optional[str]
-    date: str
-    created_at: str
+    date: date
+    created_at: datetime
 
 
 class DailyOfficeEntrySummary(BaseModel):
@@ -100,6 +101,7 @@ class DailyOfficeEntrySummary(BaseModel):
     server_name: str
     team_name: str
 
+
 class CompanyHoliday(BaseModel):
-    holiday_date: str
+    holiday_date: date
     description: str

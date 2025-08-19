@@ -35,8 +35,8 @@ class OfficeEntryService:
         entry = OfficeEntry(
             author_id=author_id,
             message_id=message_id,
-            date=date.isoformat(),
-            created_at=get_datetime_now().isoformat(),
+            date=date,
+            created_at=get_datetime_now(),
         )
         await self.office_entry_repository.insert_office_entry(entry)
 

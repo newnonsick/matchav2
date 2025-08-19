@@ -18,10 +18,7 @@ class StandupReportGenerator:
         bangkok_tz = pytz.timezone("Asia/Bangkok")
 
         for standup in standups:
-            date_obj_utc = datetime.fromisoformat(
-                standup.timestamp.replace("Z", "+00:00")
-            )
-            date_obj_bkk = date_obj_utc.astimezone(bangkok_tz)
+            date_obj_bkk = standup.timestamp.astimezone(bangkok_tz)
             datetime_formatted = date_obj_bkk.strftime("%d/%m/%Y %H:%M:%S")
             month_formatted = date_obj_bkk.strftime("%Y-%m")
             data.append(

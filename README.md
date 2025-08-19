@@ -1,6 +1,6 @@
 # Matcha Bot
 
-Matcha Bot is a versatile Discord bot designed to streamline daily stand-up processes and manage leave and office entry requests for teams. It integrates with Supabase for data storage, Google Gemini for natural language processing, and provides robust reporting capabilities, including email delivery of reports.
+Matcha Bot is a versatile Discord bot designed to streamline daily stand-up processes and manage leave and office entry requests for teams. It integrates with PostgreSQL for data storage, Google Gemini for natural language processing, and provides robust reporting capabilities, including email delivery of reports.
 
 ## Features
 
@@ -63,15 +63,15 @@ Matcha Bot is a versatile Discord bot designed to streamline daily stand-up proc
 ├── core/
 │   └── custom_bot.py     # Custom Bot class extending discord.ext.commands.Bot with services/repositories
 ├── db/
-│   ├── migations/        # SQL migration scripts for Supabase
+│   ├── migations/        # SQL migration scripts for PostgreSQL
 │   │   ├── 0.sql         # Initial schema setup
 │   │   ├── 1.sql         # Function to get attendance by date and channel
 │   │   ├── 2.sql         # Function to get attendance by date across teams
 │   │   ├── 3.sql         # Adds user roles (admin/user)
 │   │   ├── 4.sql         # Creates office_entries table
 │   │   └── get_daily_office_entries.sql # Function to get daily office entries
-│   └── supabase.py       # Supabase client initialization and connection
-├── repositories/         # Data access layer for Supabase
+│   └── asyncpg_client.py       # Asyncpg client initialization and connection
+├── repositories/         # Data access layer for PostgreSQL
 │   ├── leave_repository.py
 │   ├── member_repository.py
 │   ├── office_entry_repository.py
@@ -103,7 +103,7 @@ Matcha Bot is a versatile Discord bot designed to streamline daily stand-up proc
 
 *   Python 3.13+
 *   Discord Bot Token
-*   Supabase Project URL and Key
+*   PostgreSQL Database Connection String (DSN)
 *   Google Gemini API Key
 *   SMTP Server details for email functionality
 
@@ -131,8 +131,7 @@ Matcha Bot is a versatile Discord bot designed to streamline daily stand-up proc
 
     ```env
     BOT_TOKEN="YOUR_DISCORD_BOT_TOKEN"
-    SUPABASE_URL="YOUR_SUPABASE_URL"
-    SUPABASE_KEY="YOUR_SUPABASE_SERVICE_ROLE_KEY"
+    DATABASE_URL="postgresql://YOUR_USER:YOUR_PASSWORD@YOUR_HOST:YOUR_PORT/YOUR_DATABASE"
     ATTENDANCE_TRAINEE_CHANNEL_ID="YOUR_TRAINEE_ATTENDANCE_CHANNEL_ID"
     ATTENDANCE_EMPLOYEE_CHANNEL_ID="YOUR_EMPLOYEE_ATTENDANCE_CHANNEL_ID"
     OFFICE_ENTRY_SUMMARY_CHANNEL_ID="YOUR_OFFICE_ENTRY_SUMMARY_CHANNEL_ID"
@@ -145,8 +144,8 @@ Matcha Bot is a versatile Discord bot designed to streamline daily stand-up proc
     SMTP_PASSWORD="YOUR_SMTP_PASSWORD"
     ```
 
-5.  **Supabase Database Setup:**
-    Execute the SQL migration scripts located in `db/migations/` in your Supabase project to set up the necessary tables and functions (`0.sql`, `1.sql`, `2.sql`, `3.sql`, `4.sql`, `get_daily_office_entries.sql`).
+5.  **PostgreSQL Database Setup:**
+    Execute the SQL migration scripts located in `db/migations/` in your PostgreSQL project to set up the necessary tables and functions (`0.sql`, `1.sql`, `2.sql`, `3.sql`, `4.sql`, `get_daily_office_entries.sql`).
 
 ### Running the Bot
 

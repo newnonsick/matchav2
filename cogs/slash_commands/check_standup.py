@@ -62,7 +62,15 @@ class CheckStandup(commands.Cog):
                 )
             )
 
+            holiday_days = await self.client.company_service.get_holiday_days(
+                from_datetime=from_datetime, to_datetime=to_datetime
+            )
+
             month_weekdeys = get_weekdays_in_month(month)
+
+            month_weekdeys = [
+                day for day in month_weekdeys if day not in holiday_days
+            ]
 
             embed = await self.client.standup_service.get_monthly_standup_embed(
                 user_standup_data=user_standup_data,

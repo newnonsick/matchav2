@@ -22,7 +22,7 @@ class GeminiService:
         self, leave_request: str
     ) -> Optional[LeaveRequestAnalysis]:
         client = self._get_gemini_client()
-        model = "gemini-2.0-flash-lite"  # gemini-2.0-flash
+        model = "gemini-2.0-flash"  # gemini-2.0-flash
         contents = [
             types.Content(
                 role="user",

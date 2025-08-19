@@ -5,13 +5,13 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
-SUPABASE_URL = os.getenv("SUPABASE_URL", "")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+DATABASE_URL = os.getenv("DATABASE_URL", "")
 ATTENDANCE_TRAINEE_CHANNEL_ID = int(os.getenv("ATTENDANCE_TRAINEE_CHANNEL_ID", ""))
 ATTENDANCE_EMPLOYEE_CHANNEL_ID = int(os.getenv("ATTENDANCE_EMPLOYEE_CHANNEL_ID", ""))
 OFFICE_ENTRY_SUMMARY_CHANNEL_ID = int(os.getenv("OFFICE_ENTRY_SUMMARY_CHANNEL_ID", ""))
 LEAVE_SUMMARY_CHANNEL_ID = int(os.getenv("LEAVE_SUMMARY_CHANNEL_ID", ""))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+DAILY_VOICE_CHANNEL_ID = int(os.getenv("DAILY_VOICE_CHANNEL_ID", ""))
 
 SMTP_SERVER = os.getenv("SMTP_SERVER", "")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
@@ -44,4 +44,11 @@ RECEIVED_STANDUP_REMOVAL_NOTIFICATION_USERIDS = [PMHEE_USER_ID]
 
 MATCHA_HELP_IMG_URL = "https://qyjhozvrdsghqxjbaldu.supabase.co/storage/v1/object/public/matcha-image//matchaxbotnoi-n.png"
 
-ENTRY_OFFICE_KEYWORDS = ["เข้าออฟฟิศ", "เข้าบริษัท", "เข้า office", "office", "onsite ออฟฟิศ"] # Only lowercase keywords
+ENTRY_OFFICE_KEYWORDS = [
+    "เข้าออฟฟิศ",
+    "เข้าบริษัท",
+    "เข้า office",
+    "office",
+    "onsite ออฟฟิศ",
+]  # Only lowercase keywords
+
