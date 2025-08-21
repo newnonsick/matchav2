@@ -71,9 +71,34 @@ CREATE TABLE public.company_holidays (
   description text NOT NULL
 );
 
+CREATE TABLE public.attendance_activity (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, 
+  author_id TEXT NOT NULL, 
+  event_time TIMESTAMP WITH TIME ZONE NOT NULL, 
+  event_type VARCHAR(5) CHECK (
+    event_type IN ('join', 'leave')
+  ), 
+  date DATE NOT NULL
+);
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TYPE standup_task_status AS ENUM ('todo', 'in_progress', 'done');
+
+CREATE TABLE tasks (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  message_id TEXT NOT NULL,
+  author_id TEXT NOT NULL,
+  task TEXT NOT NULL,
+  status standup_task_status NOT NULL DEFAULT 'todo',
+  FOREIGN KEY (message_id, author_id) REFERENCES public.message (message_id, author_id) ON DELETE CASCADE
+);
+
 -- ALTER TABLE public.team ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE public.member_team ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE public.message ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE public.attendance ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE public.office_entry ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE public.company_holidays ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.attendance_activity ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;

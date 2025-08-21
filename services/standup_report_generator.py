@@ -23,8 +23,14 @@ class StandupReportGenerator:
             month_formatted = date_obj_bkk.strftime("%Y-%m")
             data.append(
                 {
-                    f"Report {month_formatted}: {user_name}": datetime_formatted,
-                    " ": extract_bullet_points(standup.content),
+                    f"Report {month_formatted}: {user_name}": standup.message_date.strftime(
+                        "%d/%m/%Y"
+                    ),
+                    "content": "\n".join(
+                        f"- {x}" for x in extract_bullet_points(standup.content)
+                    ),
+                    "created_at": datetime_formatted,
+                    "last_updated_at": standup.last_updated_at.astimezone(bangkok_tz).strftime("%d/%m/%Y %H:%M:%S") if standup.last_updated_at else "N/A",
                 }
             )
 
@@ -38,6 +44,8 @@ class StandupReportGenerator:
             worksheet = writer.sheets[sheet_name]
             worksheet.column_dimensions["A"].width = 40
             worksheet.column_dimensions["B"].width = 80
+            worksheet.column_dimensions["C"].width = 20
+            worksheet.column_dimensions["D"].width = 20
 
             alignment_top = Alignment(vertical="top", wrap_text=True)
             for row in worksheet.iter_rows(

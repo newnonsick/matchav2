@@ -58,11 +58,11 @@ class Team(commands.Cog):
                 )
                 return
 
-        from_datetime, to_datetime = get_datetime_range(target_date)
+        # from_datetime, to_datetime = get_datetime_range(target_date)
 
         userid_wrote_standup = (
-            await self.client.standup_service.get_userid_wrote_standup(
-                channel_id, from_datetime, to_datetime
+            await self.client.standup_service.get_userid_wrote_standup_by_date(
+                channel_id, target_date, target_date
             )
         )
 

@@ -14,7 +14,7 @@ from repositories.leave_repository import LeaveRepository
 from repositories.member_repository import MemberRepository
 from repositories.office_entry_repository import OfficeEntryRepository
 from repositories.standup_repository import StandupRepository
-from repositories.voice_repository import VoiceRepository
+from repositories.voice_attendance_repository import VoiceAttendanceRepository
 from services.company_service import CompanyService
 from services.email_service import EmailService
 from services.gemini_service import GeminiService
@@ -23,7 +23,7 @@ from services.member_service import MemberService
 from services.office_entry_service import OfficeEntryService
 from services.standup_report_generator import StandupReportGenerator
 from services.standup_service import StandupService
-from services.voice_service import VoiceService
+from services.voice_attendance_service import VoiceAttendanceService
 
 
 class CustomBot(commands.Bot):
@@ -57,8 +57,10 @@ class CustomBot(commands.Bot):
         )
         self.company_repository = CompanyRepository(self.db)
         self.company_service = CompanyService(self.company_repository, self)
-        self.voice_repository = VoiceRepository(self.db)
-        self.voice_service = VoiceService(self.voice_repository, self)
+        self.voice_attendance_repository = VoiceAttendanceRepository(self.db)
+        self.voice_attendance_service = VoiceAttendanceService(
+            self.voice_attendance_repository, self
+        )
 
     async def close(self):
         print("Closing the bot and cleaning up resources.")

@@ -42,28 +42,28 @@ class CheckStandup(commands.Cog):
             )
             return
 
-        from_datetime, to_datetime = get_month_range(month)
+        from_date, to_date = get_month_range(month)
         user_id = interaction.user.id
 
         try:
             user_standup_data = (
-                await self.client.standup_service.get_standups_by_user_and_datetime(
+                await self.client.standup_service.get_standups_by_user_and_date(
                     user_id=user_id,
-                    from_datetime=from_datetime,
-                    to_datetime=to_datetime,
+                    from_date=from_date,
+                    to_date=to_date,
                 )
             )
 
             user_leave_data = (
                 await self.client.leave_service.get_leave_by_userid_and_date(
                     user_id=user_id,
-                    from_date=from_datetime,
-                    to_date=to_datetime,
+                    from_date=from_date,
+                    to_date=to_date,
                 )
             )
 
             holiday_days = await self.client.company_service.get_holiday_days(
-                from_datetime=from_datetime, to_datetime=to_datetime
+                from_date=from_date, to_date=to_date
             )
 
             month_weekdeys = get_weekdays_in_month(month)

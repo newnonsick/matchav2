@@ -37,7 +37,17 @@ class OfficeEntryRepository:
         try:
             conn = await self.asyncpg_client.get_connection()
             rows = await conn.fetch(
-                "SELECT author_id, server_name, team_name FROM get_daily_office_entries($1)",
+                """
+                SELECT
+                    oe.author_id,
+                    mt.server_name,
+                    t.team_name
+                FROM public.office_entries oe
+                JOIN public.member_team mt on oe.author_id = mt.author_id
+                JOIN public.team t on mt.channel_id = t.channel_id
+                WHERE oe.date = $1
+                ORDER BY t.team_name asc, mt.server_name asc;
+                """,
                 target_date,
             )
             return (

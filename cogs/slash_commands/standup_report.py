@@ -76,7 +76,7 @@ class StandupReport(commands.Cog):
                 content=f"Generating stand-up report for {month}..."
             )
 
-            from_datetime, to_datetime = get_month_range(month)
+            from_date, to_date = get_month_range(month)
 
             target_users: list[MemberTeam] = []
             if user:
@@ -114,8 +114,8 @@ class StandupReport(commands.Cog):
                 target_user_name = target_user.server_name
 
                 user_standups = (
-                    await self.client.standup_service.get_standups_by_user_and_datetime(
-                        int(target_user_id), from_datetime, to_datetime
+                    await self.client.standup_service.get_standups_by_user_and_date(
+                        int(target_user_id), from_date, to_date
                     )
                 )
 

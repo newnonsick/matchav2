@@ -37,32 +37,32 @@ class VoiceEvents(commands.Cog):
 
         try:
 
-            if after.channel and after.channel.id == DAILY_VOICE_CHANNEL_ID:
-                if (
-                    await self.client.voice_service.get_lested_event_type_by_author_id(
-                        member.id
-                    )
-                    == "join"
-                ):
-                    return
+            if (
+                after.channel
+                and after.channel.id == DAILY_VOICE_CHANNEL_ID
+                and await self.client.voice_attendance_service.get_lested_event_type_by_author_id(
+                    member.id
+                )
+                != "join"
+            ):
 
-                await self.client.voice_service.insert_voice_log(
+                await self.client.voice_attendance_service.insert_voice_log(
                     author_id=str(member.id),
                     event_time=now,
                     event_type="join",
                     date=today,
                 )
 
-            elif before.channel and before.channel.id == DAILY_VOICE_CHANNEL_ID:
-                if (
-                    await self.client.voice_service.get_lested_event_type_by_author_id(
-                        member.id
-                    )
-                    == "leave"
-                ):
-                    return
+            elif (
+                before.channel
+                and before.channel.id == DAILY_VOICE_CHANNEL_ID
+                and await self.client.voice_attendance_service.get_lested_event_type_by_author_id(
+                    member.id
+                )
+                != "leave"
+            ):
 
-                await self.client.voice_service.insert_voice_log(
+                await self.client.voice_attendance_service.insert_voice_log(
                     author_id=str(member.id),
                     event_time=now,
                     event_type="leave",

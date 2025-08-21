@@ -17,9 +17,9 @@ class CompanyService:
         return holiday is not None
 
     async def get_holiday_days(
-        self, from_datetime: datetime, to_datetime: datetime
+        self, from_date: date, to_date: date
     ) -> list[date]:
         holidays = await self.companyRepository.get_holidays_by_date_range(
-            from_date=from_datetime, to_date=to_datetime
+            from_date=from_date, to_date=to_date
         )
         return [holiday.holiday_date for holiday in holidays]

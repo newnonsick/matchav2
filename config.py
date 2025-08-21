@@ -12,6 +12,12 @@ OFFICE_ENTRY_SUMMARY_CHANNEL_ID = int(os.getenv("OFFICE_ENTRY_SUMMARY_CHANNEL_ID
 LEAVE_SUMMARY_CHANNEL_ID = int(os.getenv("LEAVE_SUMMARY_CHANNEL_ID", ""))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 DAILY_VOICE_CHANNEL_ID = int(os.getenv("DAILY_VOICE_CHANNEL_ID", ""))
+DAILY_VOICE_ATTENDANCE_CHANNEL_ID = int(
+    os.getenv("DAILY_VOICE_ATTENDANCE_CHANNEL_ID", "")
+)
+MONTHLY_RANKING_VOICE_ATTENDANCE_CHANNEL_ID = int(
+    os.getenv("MONTHLY_RANKING_VOICE_ATTENDANCE_CHANNEL_ID", "")
+)
 
 SMTP_SERVER = os.getenv("SMTP_SERVER", "")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
@@ -27,6 +33,30 @@ LEAVE_TYPE_MAP = {
 PARTIAL_LEAVE_MAP = {
     "afternoon": "ครึ่งบ่าย",
     "morning": "ครึ่งเช้า",
+}
+
+THAI_STATUS_MAP = {
+    "weekend": "วันหยุดสุดสัปดาห์",
+    "holiday": "วันหยุดราชการ",
+    "leave": "ลางาน",
+    "on_time": "ตรงเวลา",
+    "late": "มาสาย",
+    "absent": "ไม่มา",
+}
+
+ATTENDANCE_STATUS_EMOTE_MAP = {
+    "weekend": "🌴",
+    "holiday": "🏖️",
+    "leave": "📝",
+    "on_time": "✅",
+    "late": "⏰",
+    "absent": "❌",
+}
+
+TASK_STATUS_MAP = {
+    "todo": "Todo",
+    "in_progress": "In Progress",
+    "done": "Done",
 }
 
 TTS_NOTION_STANDUP_BOT_ID = 1374302702917517392
@@ -51,4 +81,3 @@ ENTRY_OFFICE_KEYWORDS = [
     "office",
     "onsite ออฟฟิศ",
 ]  # Only lowercase keywords
-

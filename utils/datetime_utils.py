@@ -115,32 +115,26 @@ def get_weekdays_in_month(yyyy_mm: str) -> list[date]:
 
 
 def get_month_range(
-    month_str: str, timezone_str: str = "Asia/Bangkok"
-) -> tuple[datetime, datetime]:
-    tz = ZoneInfo(timezone_str)
+    month_str: str
+) -> tuple[date, date]:
     try:
-        month_start = datetime.strptime(month_str, "%Y-%m").replace(tzinfo=tz)
+        month_start = datetime.strptime(month_str, "%Y-%m").date()
     except ValueError:
         raise ValueError("Invalid month format. Expected YYYY-MM.")
 
-    if month_start.month == 12:
-        next_month = datetime(month_start.year + 1, 1, 1, tzinfo=tz)
-    else:
-        next_month = datetime(month_start.year, month_start.month + 1, 1, tzinfo=tz)
-
-    month_end = next_month - timedelta(days=1)
-    month_end = month_end.replace(hour=23, minute=59, second=59)
+    year, month = month_start.year, month_start.month
+    last_day = calendar.monthrange(year, month)[1]
+    month_end = date(year, month, last_day)
 
     return month_start, month_end
 
 
-def get_previous_weekdays(current_date: date, num_days: int = 5) -> list[datetime]:
-    weekdays: list[datetime] = []
+def get_previous_weekdays(current_date: date, num_days: int = 5) -> list[date]:
+    weekdays: list[date] = []
 
     while len(weekdays) < num_days:
         if current_date.weekday() < 5:
-            tz = timezone(timedelta(hours=7))
-            weekdays.append(datetime.combine(current_date, time(0, 0, 0), tzinfo=tz))
+            weekdays.append(current_date)
         current_date -= timedelta(days=1)
 
     return weekdays

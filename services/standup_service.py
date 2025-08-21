@@ -2,16 +2,24 @@ import math
 import re
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Literal, Optional
+from uuid import UUID
 
 import discord
 
-from config import ENTRY_OFFICE_KEYWORDS, IGNORED_BOT_IDS, LEAVE_TYPE_MAP, PARTIAL_LEAVE_MAP
+from config import (
+    ENTRY_OFFICE_KEYWORDS,
+    IGNORED_BOT_IDS,
+    LEAVE_TYPE_MAP,
+    PARTIAL_LEAVE_MAP,
+    TASK_STATUS_MAP,
+)
 from models import (
     LeaveByDateChannel,
     LeaveRequest,
     MemberTeam,
     StandupChannel,
     StandupMessage,
+    StandupTask,
     UserStandupReport,
 )
 from utils.datetime_utils import (
@@ -22,6 +30,7 @@ from utils.datetime_utils import (
     get_date_now,
     get_previous_weekdays,
 )
+from utils.standup_utils import extract_bullet_points
 
 if TYPE_CHECKING:
     from repositories.standup_repository import StandupRepository
@@ -44,9 +53,22 @@ class StandupService:
         self.leaveService = leaveService
         self.officeEntryService = officeEntryService
 
+    async def update_task_status(
+        self, task_id: UUID, status: Literal["todo", "in_progress", "done"]) -> None:
+        if status not in TASK_STATUS_MAP:
+            raise ValueError(f"Invalid task status: {status}")
+        
+        await self.standupRepository.update_task_status(task_id, status)
+
+    async def get_standup_tasks_by_user_and_date(self, author_id: str, from_date: date, to_date: date) -> list[StandupTask]:
+        response = await self.standupRepository.get_standup_tasks_by_user_and_date(
+            author_id=author_id, from_date=from_date, to_date=to_date
+        )
+        return response
+
     def is_standup_message_entry_office(self, text: str) -> bool:
         text_lower = text.lower()
-        tasks = re.findall(r"-\s*(.*)", text_lower)
+        tasks = extract_bullet_points(text_lower)
 
         return any(keyword in tasks for keyword in ENTRY_OFFICE_KEYWORDS)
 
@@ -58,11 +80,11 @@ class StandupService:
             if "channel_id" in team and team["channel_id"]
         ]
 
-    async def get_userid_wrote_standup(
-        self, channel_id: int, from_datetime: datetime, to_datatime: datetime
+    async def get_userid_wrote_standup_by_date(
+        self, channel_id: int, from_date: date, to_data: date
     ) -> list[int]:
-        response = await self.standupRepository.get_userid_wrote_standup(
-            channel_id, from_datetime, to_datatime
+        response = await self.standupRepository.get_userid_wrote_standup_by_date(
+            channel_id, from_date, to_data
         )
         return [
             int(message["author_id"])
@@ -109,6 +131,12 @@ class StandupService:
                 f"Message with ID {message.id} from {message.author.id} contains an invalid date format: {dates[0]}. Expected format is DD/MM/YYYY."
             )
 
+        standup_tasks = extract_bullet_points(message_content)
+        if not standup_tasks:
+            raise ValueError(
+                f"Message with ID {message.id} from {message.author.id} does not contain any standup tasks."
+            )
+
         time_status = compare_date_with_today(message_date)
         if not bypass_check_date and time_status == "past":
             raise ValueError(
@@ -135,14 +163,14 @@ class StandupService:
                 else user_name
             )
 
-        message_datetime = message.edited_at or message.created_at
+        # message_datetime = message.edited_at or message.created_at
 
-        if time_status == "future":
-            timestamp = combine_date_with_start_time(message_date)
-        else:
-            timestamp = combine_date_with_specific_time(
-                message_date, convert_to_bangkok(message_datetime).time()
-            )
+        # if time_status == "future":
+        #     timestamp = combine_date_with_start_time(message_date)
+        # else:
+        #     timestamp = combine_date_with_specific_time(
+        #         message_date, convert_to_bangkok(message_datetime).time()
+        #     )
 
         standup_message = StandupMessage(
             message_id=str(message.id),
@@ -151,12 +179,19 @@ class StandupService:
             servername=user_display_name,
             channel_id=str(message.channel.id),
             content=message_content,
-            timestamp=timestamp,
+            message_date=message_date,
+            timestamp=message.created_at,
+            last_updated_at=message.edited_at,
         )
 
         # content = message_contect.replace(date, "").strip()
 
         await self.standupRepository.track_standup(standup_message)
+        await self.standupRepository.insert_standup_tasks(
+            message_id=str(message.id),
+            author_id=str(user_id),
+            tasks=standup_tasks,
+        )
 
         if self.is_standup_message_entry_office(message_content):
             await self.officeEntryService.track_office_entry(
@@ -280,12 +315,12 @@ class StandupService:
         if response:
             await self.standupRepository.delete_standup_by_message_id(message_id)
 
-    async def get_standups_by_user_and_datetime(
-        self, user_id: int, from_datetime: datetime, to_datetime: datetime
+    async def get_standups_by_user_and_date(
+        self, user_id: int, from_date: date, to_date: date
     ) -> list[UserStandupReport]:
         response: list[UserStandupReport] = (
-            await self.standupRepository.get_standups_by_user_and_datetime(
-                str(user_id), from_datetime, to_datetime
+            await self.standupRepository.get_standups_by_user_and_date(
+                str(user_id), from_date, to_date
             )
         )
         return response
@@ -309,8 +344,7 @@ class StandupService:
                 (
                     report
                     for report in user_standup_data
-                    if convert_to_bangkok(report.timestamp
-                    ).date()
+                    if report.message_date
                     == weekday
                 ),
                 None,
@@ -369,25 +403,21 @@ class StandupService:
 
         today = get_date_now()
         previous_weekdays = get_previous_weekdays(today, num_days=num_days)
-        previous_weekdays[0] = previous_weekdays[0].replace(
-            hour=23, minute=59, second=59
-        )
-
-        from_datetime = previous_weekdays[-1]
-        to_datetime = previous_weekdays[0]
+        from_date = previous_weekdays[-1]
+        to_date = previous_weekdays[0]
 
         for member in all_members:
-            member_standups = await self.get_standups_by_user_and_datetime(
+            member_standups = await self.get_standups_by_user_and_date(
                 user_id=int(member.author_id),
-                from_datetime=from_datetime,
-                to_datetime=to_datetime,
+                from_date=from_date,
+                to_date=to_date,
             )
 
             if not member_standups:
                 member_leaves = await self.leaveService.get_leave_by_userid_and_date(
                     user_id=int(member.author_id),
-                    from_date=from_datetime,
-                    to_date=to_datetime,
+                    from_date=from_date,
+                    to_date=to_date,
                 )
 
                 if not member_leaves:

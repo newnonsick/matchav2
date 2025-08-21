@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from typing import Literal, Optional
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -19,7 +20,9 @@ class StandupMessage(BaseModel):
     servername: str
     channel_id: str
     content: str
+    message_date: date
     timestamp: datetime
+    last_updated_at: Optional[datetime] = None
 
 
 class StandupMember(BaseModel):
@@ -62,7 +65,9 @@ class LeaveByDateChannel(BaseModel):
 
 class UserStandupReport(BaseModel):
     content: str
+    message_date: date
     timestamp: datetime
+    last_updated_at: Optional[datetime] = None
 
 
 class MemberTeam(BaseModel):
@@ -105,3 +110,25 @@ class DailyOfficeEntrySummary(BaseModel):
 class CompanyHoliday(BaseModel):
     holiday_date: date
     description: str
+
+
+class VoiceLog(BaseModel):
+    id: Optional[int] = None
+    author_id: str
+    event_time: datetime
+    event_type: Literal["join", "leave"]
+    date: date
+
+
+class DailyVoiceAttendance(BaseModel):
+    author_id: str
+    server_name: str
+    status: Literal["weekend", "holiday", "leave", "on_time", "late", "absent"]
+
+
+class StandupTask(BaseModel):
+    id: Optional[UUID] = None
+    message_id: str
+    author_id: str
+    task: str
+    status: Literal["todo", "in_progress", "done"]

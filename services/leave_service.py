@@ -210,7 +210,7 @@ class LeaveService:
         await message.edit(embed=embed)
 
     async def get_leave_by_userid_and_date(
-        self, user_id: int, from_date: datetime, to_date: datetime
+        self, user_id: int, from_date: date, to_date: date
     ) -> list[LeaveRequest]:
         return await self.leave_repository.get_leave_by_userid_and_date(
             user_id=str(user_id),
