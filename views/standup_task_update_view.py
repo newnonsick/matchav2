@@ -11,10 +11,11 @@ if TYPE_CHECKING:
 
 class StandupTaskUpdateView(discord.ui.View):
 
-    def __init__(self, task: StandupTask, client: "CustomBot"):
+    def __init__(self, task: StandupTask, client: "CustomBot", is_latest: bool = False):
         super().__init__(timeout=45000)
         self.task = task
         self.client = client
+        self.is_latest = is_latest
 
     @discord.ui.button(label="Todo", style=discord.ButtonStyle.red)
     async def todo_button_callback(
@@ -26,10 +27,10 @@ class StandupTaskUpdateView(discord.ui.View):
             )
             await interaction.response.edit_message(
                 content=(
-                    f"**Task ID**: {self.task.id}\n"
-                    f"**Task** {self.task.task}\n"
-                    f"**Status**: Todo\n"
-                    "---------------------------------------------------"
+                    f"**Task ID:** {self.task.id}\n"
+                    f"**Task:** {self.task.task}\n"
+                    f"**Status:** Todo\n"
+                    f"{"---------------------------------------------------" if not self.is_latest else ""}"
                 ),
                 view=None,
             )
@@ -53,7 +54,7 @@ class StandupTaskUpdateView(discord.ui.View):
                     f"**Task ID**: {self.task.id}\n"
                     f"**Task** {self.task.task}\n"
                     f"**Status**: In Progress\n"
-                    "---------------------------------------------------"
+                    f"{"---------------------------------------------------" if not self.is_latest else ""}"
                 ),
                 view=None,
             )
@@ -77,7 +78,7 @@ class StandupTaskUpdateView(discord.ui.View):
                     f"**Task ID**: {self.task.id}\n"
                     f"**Task** {self.task.task}\n"
                     f"**Status**: Done\n"
-                    "---------------------------------------------------"
+                    f"{"---------------------------------------------------" if not self.is_latest else ""}"
                 ),
                 view=None,
             )

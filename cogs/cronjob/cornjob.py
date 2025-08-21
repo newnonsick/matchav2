@@ -107,7 +107,11 @@ class DailySummarySchedulerCog(commands.Cog):
                             f"**Task:** {task.task}\n"
                             f"**Status:** {TASK_STATUS_MAP.get(task.status)}\n"
                         ),
-                        view=StandupTaskUpdateView(task=task, client=self.client),
+                        view=StandupTaskUpdateView(
+                            task=task,
+                            client=self.client,
+                            is_latest=(i == len(user_standup_tasks) - 1),
+                        ),
                     )
 
             except discord.Forbidden:
