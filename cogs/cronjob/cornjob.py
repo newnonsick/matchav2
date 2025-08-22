@@ -72,32 +72,49 @@ class DailySummarySchedulerCog(commands.Cog):
         if await self.client.company_service.is_holiday_date(current_date):
             return
 
-        target_date = get_previous_weekdays(current_date, num_days=2)[-1]
-        while await self.client.company_service.is_holiday_date(target_date):
-            target_date = get_previous_weekdays(target_date, num_days=2)[-1]
-
         all_user_in_standup = await self.client.member_service.get_all_standup_members()
 
         now = get_datetime_now()
         end_task_datetime = now.replace(hour=18, minute=30, second=0, microsecond=0)
         unix_timestamp = int(end_task_datetime.timestamp())
 
-        print(f"Sending stand-up update for {target_date} to all members...")
+        this_year = current_date.year
+        last_year = (this_year - 1) if (this_year - 1 > 0) else 1
+
+        company_holidays = await self.client.company_service.get_holiday_date_by_year(
+            from_year=last_year, to_year=this_year
+        )
 
         for user in all_user_in_standup:
+            if await self.client.leave_service.is_user_on_leave_fullday(
+                user.author_id, current_date
+            ):
+                continue
+
+            user_leave_dates = await self.client.leave_service.get_fullday_leave_date_by_userid_and_year(
+                user_id=user.author_id, from_year=last_year, to_year=this_year
+            )
+
             try:
+                target_date = get_previous_weekdays(current_date, num_days=2)[-1]
+                while (target_date in company_holidays) or (
+                    target_date in user_leave_dates
+                ):
+                    target_date = get_previous_weekdays(target_date, num_days=2)[-1]
+
                 user_standup_tasks = await self.client.standup_service.get_standup_tasks_by_user_and_date(
                     author_id=user.author_id, from_date=target_date, to_date=target_date
                 )
                 if not user_standup_tasks:
                     continue
                 discord_user = await self.client.fetch_user(int(user.author_id))
+                target_date_str = target_date.strftime("%d/%m/%Y")
                 await discord_user.send(
-                    f"📅 **Stand-Up Update for {target_date}**\n\n"
+                    f"📅 **Stand-Up Update for {target_date_str}**\n\n"
                     f"Please update your tasks before <t:{unix_timestamp}:R>.\n"
                     "Any tasks not updated will automatically be marked as **todo**.\n"
-                    f"**Note:** You can update your tasks by use `/update-task-status <task_id>`\n\n"
-                    f"Here are your stand-up tasks from {target_date}:\n\n"
+                    f"**Note:** You can update your tasks by use `/update_task_status <task_id>`\n\n"
+                    f"Here are your stand-up tasks from **{target_date_str}**:\n\n"
                 )
                 for i, task in enumerate(user_standup_tasks):
                     await discord_user.send(
@@ -110,7 +127,7 @@ class DailySummarySchedulerCog(commands.Cog):
                         view=StandupTaskUpdateView(
                             task=task,
                             client=self.client,
-                            is_latest=(i == len(user_standup_tasks) - 1),
+                            is_first=(i == 0),
                         ),
                     )
 
