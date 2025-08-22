@@ -7,7 +7,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from discord.ext import commands
 
 from config import (
-    DAILY_VOICE_ATTENDANCE_CHANNEL_ID,
+    # DAILY_VOICE_ATTENDANCE_CHANNEL_ID,
     LEAVE_SUMMARY_CHANNEL_ID,
     OFFICE_ENTRY_SUMMARY_CHANNEL_ID,
     TASK_STATUS_MAP,
@@ -136,33 +136,33 @@ class DailySummarySchedulerCog(commands.Cog):
             except Exception as e:
                 print(f"Error sending stand-up update to {user.server_name}: {e}")
 
-    async def send_daily_voice_attendance(self):
-        date = get_date_now()
+    # async def send_daily_voice_attendance(self):
+    #     date = get_date_now()
 
-        if await self.client.company_service.is_holiday_date(date):
-            return
+    #     if await self.client.company_service.is_holiday_date(date):
+    #         return
 
-        channel_id = DAILY_VOICE_ATTENDANCE_CHANNEL_ID
-        channel = self.client.get_channel(channel_id)
-        if channel and isinstance(channel, discord.TextChannel):
-            await channel.send(f"📢 **Daily Voice Attendance Summary for {date}**")
-            try:
-                for standup_channel_id in DataCache.STANDUP_CHANNELS:
-                    attendance_summary = await self.client.voice_attendance_service.get_daily_attendance_summary_by_channel_id_and_date(
-                        standup_channel_id, date
-                    )
-                    if attendance_summary:
-                        embed = await self.client.voice_attendance_service.get_daily_voice_attendance_embed(
-                            attendance_summary, date, standup_channel_id
-                        )
-                        await channel.send(embed=embed)
+    #     channel_id = DAILY_VOICE_ATTENDANCE_CHANNEL_ID
+    #     channel = self.client.get_channel(channel_id)
+    #     if channel and isinstance(channel, discord.TextChannel):
+    #         await channel.send(f"📢 **Daily Voice Attendance Summary for {date}**")
+    #         try:
+    #             for standup_channel_id in DataCache.STANDUP_CHANNELS:
+    #                 attendance_summary = await self.client.voice_attendance_service.get_daily_attendance_summary_by_channel_id_and_date(
+    #                     standup_channel_id, date
+    #                 )
+    #                 if attendance_summary:
+    #                     embed = await self.client.voice_attendance_service.get_daily_voice_attendance_embed(
+    #                         attendance_summary, date, standup_channel_id
+    #                     )
+    #                     await channel.send(embed=embed)
 
-            except discord.Forbidden:
-                print(f"Cannot send message to channel {channel_id}: Forbidden")
-            except Exception as e:
-                print(
-                    f"Error sending daily voice attendance to channel {channel_id}: {e}"
-                )
+    #         except discord.Forbidden:
+    #             print(f"Cannot send message to channel {channel_id}: Forbidden")
+    #         except Exception as e:
+    #             print(
+    #                 f"Error sending daily voice attendance to channel {channel_id}: {e}"
+    #             )
 
     async def send_leave(self):
         date = get_date_now()
