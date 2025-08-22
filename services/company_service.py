@@ -12,6 +12,10 @@ class CompanyService:
         self.companyRepository = companyRepository
         self.client = client
 
+    async def get_holiday_date_by_year(self, from_year: int, to_year: int) -> set[date]:
+        holidays = await self.companyRepository.get_holiday_date_by_year(from_year, to_year)
+        return holidays
+
     async def is_holiday_date(self, date: date) -> bool:
         holiday = await self.companyRepository.get_holiday_date_by_date(date)
         return holiday is not None

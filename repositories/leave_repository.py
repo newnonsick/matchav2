@@ -12,6 +12,61 @@ class LeaveRepository:
     def __init__(self, asyncpg_client: "AsyncpgClient"):
         self.asyncpg_client = asyncpg_client
 
+    async def get_fullday_leave_date_by_userid_and_year(
+        self, user_id: str, from_year: int, to_year: int
+    ) -> set[date]:
+        conn = None
+        try:
+            conn = await self.asyncpg_client.get_connection()
+            rows = await conn.fetch(
+                """
+                SELECT absent_date
+                    FROM attendance
+                    WHERE  author_id = $1 AND EXTRACT(YEAR FROM absent_date) BETWEEN $2 AND $3
+                    GROUP BY author_id, absent_date
+                    HAVING 
+                        COUNT(*) FILTER (WHERE partial_leave IS NULL) > 0
+                        OR (
+                            COUNT(*) FILTER (WHERE partial_leave = 'morning') > 0
+                            AND COUNT(*) FILTER (WHERE partial_leave = 'afternoon') > 0
+                        )
+                """,
+                user_id,
+                from_year,
+                to_year,
+            )
+            return {row["absent_date"] for row in rows} if rows else set()
+        finally:
+            if conn:
+                await self.asyncpg_client.release_connection(conn)
+
+    async def is_user_on_leave_fullday(self, author_id: str, target_date: date) -> bool:
+        conn = None
+        try:
+            conn = await self.asyncpg_client.get_connection()
+            row = await conn.fetchrow(
+                """
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM attendance
+                    WHERE  author_id = $1 AND absent_date = $2
+                    GROUP BY author_id, absent_date
+                    HAVING 
+                        COUNT(*) FILTER (WHERE partial_leave IS NULL) > 0
+                        OR (
+                            COUNT(*) FILTER (WHERE partial_leave = 'morning') > 0
+                            AND COUNT(*) FILTER (WHERE partial_leave = 'afternoon') > 0
+                        )
+                );
+                """,
+                author_id,
+                target_date,
+            )
+            return row[0] if row else False
+        finally:
+            if conn:
+                await self.asyncpg_client.release_connection(conn)
+
     async def get_user_inleave(self, channel_id: str, target_date: date) -> list:
         conn = None
         try:

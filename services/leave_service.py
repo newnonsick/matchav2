@@ -26,6 +26,13 @@ class LeaveService:
         self.gemini_service = gemini_service
         self.client = client
 
+    async def is_user_on_leave_fullday(
+        self, author_id: str, date: date ) -> bool:
+        response = await self.leave_repository.is_user_on_leave_fullday(
+            author_id, date
+        )
+        return response
+
     async def get_user_inleave(self, channel_id: int, date: date) -> list[LeaveByDateChannel]:
         response = await self.leave_repository.get_user_inleave(str(channel_id), date)
         return response
@@ -216,4 +223,13 @@ class LeaveService:
             user_id=str(user_id),
             from_date=from_date,
             to_date=to_date,
+        )
+
+    async def get_fullday_leave_date_by_userid_and_year(
+        self, user_id: str, from_year: int, to_year: int
+    ) -> set[date]:
+        return await self.leave_repository.get_fullday_leave_date_by_userid_and_year(
+            user_id=str(user_id),
+            from_year=from_year,
+            to_year=to_year,
         )

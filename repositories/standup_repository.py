@@ -14,6 +14,24 @@ class StandupRepository:
     def __init__(self, asyncpg_client: "AsyncpgClient"):
         self.asyncpg_client = asyncpg_client
 
+    async def get_task_by_id(
+        self, task_id: UUID) -> Optional[StandupTask]:
+        conn = None
+        try:
+            conn = await self.asyncpg_client.get_connection()
+            row = await conn.fetchrow(
+                """
+                SELECT id, message_id, author_id, task, status
+                FROM tasks
+                WHERE id = $1
+                """,
+                str(task_id),
+            )
+            return StandupTask(**dict(row)) if row else None
+        finally:
+            if conn:
+                await self.asyncpg_client.release_connection(conn)
+
     async def update_task_status(
         self, task_id: UUID, status: Literal["todo", "in_progress", "done"]
     ) -> None:

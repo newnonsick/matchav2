@@ -11,11 +11,17 @@ if TYPE_CHECKING:
 
 class StandupTaskUpdateView(discord.ui.View):
 
-    def __init__(self, task: StandupTask, client: "CustomBot", is_latest: bool = False):
-        super().__init__(timeout=45000)
+    def __init__(
+        self,
+        task: StandupTask,
+        client: "CustomBot",
+        is_first: bool = False,
+        timeout: int = 45000,
+    ):
+        super().__init__(timeout=timeout)
         self.task = task
         self.client = client
-        self.is_latest = is_latest
+        self.is_first = is_first
 
     @discord.ui.button(label="Todo", style=discord.ButtonStyle.red)
     async def todo_button_callback(
@@ -27,10 +33,10 @@ class StandupTaskUpdateView(discord.ui.View):
             )
             await interaction.response.edit_message(
                 content=(
+                    f"{"---------------------------------------------------" if not self.is_first else ""}\n"
                     f"**Task ID:** {self.task.id}\n"
                     f"**Task:** {self.task.task}\n"
                     f"**Status:** Todo\n"
-                    f"{"---------------------------------------------------" if not self.is_latest else ""}"
                 ),
                 view=None,
             )
@@ -51,10 +57,10 @@ class StandupTaskUpdateView(discord.ui.View):
             )
             await interaction.response.edit_message(
                 content=(
+                    f"{"---------------------------------------------------" if not self.is_first else ""}\n"
                     f"**Task ID**: {self.task.id}\n"
                     f"**Task** {self.task.task}\n"
                     f"**Status**: In Progress\n"
-                    f"{"---------------------------------------------------" if not self.is_latest else ""}"
                 ),
                 view=None,
             )
@@ -75,10 +81,10 @@ class StandupTaskUpdateView(discord.ui.View):
             )
             await interaction.response.edit_message(
                 content=(
+                    f"{"---------------------------------------------------" if not self.is_first else ""}\n"
                     f"**Task ID**: {self.task.id}\n"
                     f"**Task** {self.task.task}\n"
                     f"**Status**: Done\n"
-                    f"{"---------------------------------------------------" if not self.is_latest else ""}"
                 ),
                 view=None,
             )

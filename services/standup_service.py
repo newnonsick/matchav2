@@ -53,11 +53,17 @@ class StandupService:
         self.leaveService = leaveService
         self.officeEntryService = officeEntryService
 
+    async def get_task_by_id(self, task_id: UUID) -> Optional[StandupTask]:
+        response = await self.standupRepository.get_task_by_id(task_id)
+        if response:
+            return response
+        return None
+
     async def update_task_status(
         self, task_id: UUID, status: Literal["todo", "in_progress", "done"]) -> None:
         if status not in TASK_STATUS_MAP:
             raise ValueError(f"Invalid task status: {status}")
-        
+
         await self.standupRepository.update_task_status(task_id, status)
 
     async def get_standup_tasks_by_user_and_date(self, author_id: str, from_date: date, to_date: date) -> list[StandupTask]:
