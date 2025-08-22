@@ -51,6 +51,9 @@ CREATE TABLE public.message (
   servername text,
   channel_id text NOT NULL,
   content text NOT NULL,
+  message_date date NULL,
+  timestamp timestamp with time zone NULL,
+  last_updated_at timestamp with time zone NULL,
   CONSTRAINT message_pkey PRIMARY KEY (message_id, author_id),
   FOREIGN KEY (channel_id) REFERENCES public.team(channel_id)
 );
