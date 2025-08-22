@@ -49,14 +49,14 @@ class DailySummarySchedulerCog(commands.Cog):
             hour=18,
             minute=30,
         )
-        self.scheduler.add_job(
-            self.send_daily_voice_attendance,
-            trigger="cron",
-            day_of_week="mon-fri",
-            hour=9,
-            minute=30,
-            second=1,
-        )
+        # self.scheduler.add_job(
+        #     self.send_daily_voice_attendance,
+        #     trigger="cron",
+        #     day_of_week="mon-fri",
+        #     hour=9,
+        #     minute=30,
+        #     second=1,
+        # )
         self.scheduler.add_job(
             self.send_previous_standup_remarks,
             trigger="cron",

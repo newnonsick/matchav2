@@ -31,6 +31,12 @@ class HelpSelect(discord.ui.Select):
                 description="Effortlessly manage leave requests",
             ),
             discord.SelectOption(
+                label="Office Entry Commands",
+                value="office_entry_commands",
+                emoji="🏢",
+                description="Track office entries automatically",
+            ),
+            discord.SelectOption(
                 label="Admin Commands (Prefix !)",
                 value="admin_commands",
                 emoji="👑",
@@ -61,19 +67,21 @@ class HelpSelect(discord.ui.Select):
             embed.description = (
                 "**Manage your team's daily stand-ups with ease!**\n\n"
                 "**`/register`**\n"
-                "  • Set up a channel for stand-ups.\n\n"
+                " • Set up a channel for stand-ups.\n\n"
                 "**`/add_member <user>`**\n"
-                "  • Include a user in stand-up tracking.\n\n"
+                " • Include a user in stand-up tracking.\n\n"
                 "**`/remove_user <user|user_id>`**\n"
-                "  • Remove a user from stand-up tracking.\n\n"
+                " • Remove a user from stand-up tracking.\n\n"
                 "**`/team [date]`**\n"
-                "  • See who's submitted stand-ups and who's on leave.\n\n"
+                " • See who's submitted stand-ups and who's on leave.\n\n"
                 "**`/track <message_id>`**\n"
-                "  • Manually track a missed stand-up message.\n\n"
+                " • Manually track a missed stand-up message.\n\n"
                 "**`/standup_report <month> [to_email] [user] [team_channel]`**\n"
-                "  • Generate Excel reports for stand-ups, customizable by user/team and delivery.\n\n"
+                " • Generate Excel reports for stand-ups, customizable by user/team and delivery.\n\n"
                 "**`/check_standup [month]`**\n"
-                "  • Review your personal monthly stand-up history, including leave days.\n"
+                " • Review your personal monthly stand-up history, including leave days.\n\n"
+                "**`/update_task_status <task_id>`**\n"
+                " • Update the status of a specific stand-up task."
             )
         elif selected_value == "leave_commands":
             embed.title = "🌴 Leave Management Commands"
@@ -81,24 +89,31 @@ class HelpSelect(discord.ui.Select):
                 "**Effortlessly handle leave requests with smart automation!**\n\n"
                 "• **Automatic Tracking**: I automatically detect and record leave requests from messages in designated channels using AI. You'll get a private confirmation! *No command needed, just send your leave message!*\n\n"
                 "• **Leave Deletion**: If you delete your original leave request, I'll automatically remove it from the system.\n\n"
+                "• **Leave Edit**: If you edit your original leave request, I'll automatically update it in the system and send you a new confirmation.\n\n"
                 "**`/leave_summary [date]`**\n"
-                "  • View a real-time summary of all leaves for a specific day.\n"
+                " • View a real-time summary of all leaves for a specific day.\n"
+            )
+        elif selected_value == "office_entry_commands":
+            embed.title = "🏢 Office Entry Commands"
+            embed.description = (
+                "**Automatically track office entries based on stand-up messages!**\n\n"
+                "• **Automatic Tracking**: I automatically identify and record office entry confirmations from stand-up messages containing keywords like `เข้าออฟฟิศ`, `เข้าบริษัท`, `เข้า office`, `office`, `onsite ออฟฟิศ`."
             )
         elif selected_value == "admin_commands":
             embed.title = "👑 Admin Commands (Prefix `!`)"
             embed.description = (
                 "**Special commands for administrators to send announcements.**\n\n"
                 "**`!announce [message] [attachments]`**\n"
-                "  • Send announcements to all registered stand-up channels with optional files.\n"
+                " • Send announcements to all registered stand-up channels with optional files.\n"
             )
         elif selected_value == "admin_role_commands":
             embed.title = "🛡️ Admin Role Commands (Slash `/`)"
             embed.description = (
                 "**Manage user roles with these administrator-only slash commands.**\n\n"
                 "**`/promote_to_admin <user>`**\n"
-                "  • Promote an existing member of a stand-up channel to an admin.\n\n"
+                " • Promote an existing member of a stand-up channel to an admin.\n\n"
                 "**`/demote_to_user <user>`**\n"
-                "  • Demote an admin back to a regular user.\n"
+                " • Demote an admin back to a regular user.\n"
             )
         elif selected_value == "main_page":
             embed.title = "🍵 Welcome to Matcha Bot!"
