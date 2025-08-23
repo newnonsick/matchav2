@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING
 from datetime import date, datetime
 
+from models import CompanyHoliday
+
 
 if TYPE_CHECKING:
     from core.custom_bot import CustomBot
@@ -27,3 +29,7 @@ class CompanyService:
             from_date=from_date, to_date=to_date
         )
         return [holiday.holiday_date for holiday in holidays]
+    
+    async def get_holiday_days_by_year(self, year: int) -> list[CompanyHoliday]:
+        holidays = await self.companyRepository.get_holidays_by_year(year)
+        return holidays

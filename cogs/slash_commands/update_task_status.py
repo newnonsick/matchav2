@@ -40,7 +40,7 @@ class UpdateTaskStatus(commands.Cog):
             return
 
         view = StandupTaskUpdateView(
-            task=task, client=self.client, is_first=False, timeout=180
+            task=task, client=self.client, is_first=True, timeout=180
         )
         await interaction.response.send_message(
             content=(
