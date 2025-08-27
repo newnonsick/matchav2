@@ -132,3 +132,13 @@ class StandupTask(BaseModel):
     author_id: str
     task: str
     status: Literal["todo", "in_progress", "done"]
+
+
+class BotPanel(BaseModel):
+    message_id: int
+    channel_id: int
+
+class ClockinLog(BaseModel):
+    id: Optional[int] = None
+    author_id: str
+    clock_in_time: datetime

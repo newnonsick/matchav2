@@ -1,4 +1,6 @@
+import random
 import re
+import string
 
 
 def convert_string_to_snake_case(string: str) -> str:
@@ -19,3 +21,8 @@ def remove_special_characters(string: str, allowed: str = "_") -> str:
 
 def make_name_safe(name: str) -> str:
     return convert_string_to_snake_case(remove_special_characters(name))
+
+
+def random_text(length=6):
+    characters = string.ascii_uppercase + string.digits
+    return "".join(random.choice(characters) for _ in range(length))

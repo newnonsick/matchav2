@@ -144,7 +144,7 @@ class StandupReport(commands.Cog):
                 file_team_name = (
                     f"{make_name_safe(team_channel.name)}_" if team_channel else ""
                 )
-                compessed_file = compress_files_to_zip(
+                compessed_file = await compress_files_to_zip(
                     all_attachments,
                     f"{file_user_name}{file_team_name}standup_{month}.zip",
                 )
@@ -201,7 +201,7 @@ class StandupReport(commands.Cog):
                         and current_zip_files
                     ):
                         zip_name = f"{file_user_name}{file_team_name}standup_{month}_{file_part}.zip"
-                        zip_bytes_io = compress_files_to_zip(
+                        zip_bytes_io = await compress_files_to_zip(
                             current_zip_files, zip_name
                         )
 
@@ -218,7 +218,7 @@ class StandupReport(commands.Cog):
 
                 if current_zip_files:
                     zip_name = f"{file_user_name}{file_team_name}standup_{month}_{file_part}.zip"
-                    zip_bytes_io = compress_files_to_zip(current_zip_files, zip_name)
+                    zip_bytes_io = await compress_files_to_zip(current_zip_files, zip_name)
 
                     all_zip_files.append(discord.File(zip_bytes_io, filename=zip_name))
 

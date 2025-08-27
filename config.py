@@ -73,6 +73,7 @@ PMHEE_USER_ID = 1029245548307419146
 RECEIVED_STANDUP_REMOVAL_NOTIFICATION_USERIDS = [PMHEE_USER_ID]
 
 MATCHA_HELP_IMG_URL = "https://qyjhozvrdsghqxjbaldu.supabase.co/storage/v1/object/public/matcha-image//matchaxbotnoi-n.png"
+BOT_PANEL_IMG_URL = "https://qyjhozvrdsghqxjbaldu.supabase.co/storage/v1/object/public/matcha-image/matcha-panel-banner-n.png"
 
 ENTRY_OFFICE_KEYWORDS = [
     "เข้าออฟฟิศ",
@@ -81,3 +82,6 @@ ENTRY_OFFICE_KEYWORDS = [
     "office",
     "onsite ออฟฟิศ",
 ]  # Only lowercase keywords
+
+CLOCKIN_START_TIME = (8, 0)
+CLOCKIN_END_TIME = (10, 0)

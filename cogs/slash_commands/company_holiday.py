@@ -42,14 +42,12 @@ class CompanyHoliday(commands.Cog):
             description="Here's a list of company holidays for the year:"
         )
 
-        # Group holidays by month
         holidays_by_month = defaultdict(list)
         for holiday in holidays:
             month_name = holiday.holiday_date.strftime('%B')
             date_str = holiday.holiday_date.strftime('%a, %d %b %Y')
-            holidays_by_month[month_name].append(f"- **{date_str}** — {holiday.description}")
+            holidays_by_month[month_name].append(f"- `{date_str}` — {holiday.description}")
 
-        # Add a field for each month with holidays
         for month, holiday_lines in holidays_by_month.items():
             embed.add_field(
                 name=f"📅 {month}", value="\n".join(holiday_lines), inline=False

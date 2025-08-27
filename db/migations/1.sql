@@ -97,6 +97,19 @@ CREATE TABLE tasks (
   FOREIGN KEY (message_id, author_id) REFERENCES public.message (message_id, author_id) ON DELETE CASCADE
 );
 
+CREATE TABLE bot_panel (
+    id BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK (id),
+    message_id BIGINT NOT NULL,
+    channel_id BIGINT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() 
+);
+
+CREATE TABLE clockin_log (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, 
+    author_id TEXT NOT NULL,
+    clock_in_time TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
 -- ALTER TABLE public.team ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE public.member_team ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE public.message ENABLE ROW LEVEL SECURITY;
@@ -105,3 +118,5 @@ CREATE TABLE tasks (
 -- ALTER TABLE public.company_holidays ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE public.attendance_activity ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.bot_panel ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.clockin_log ENABLE ROW LEVEL SECURITY;
