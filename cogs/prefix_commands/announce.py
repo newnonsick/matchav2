@@ -41,7 +41,7 @@ class Announce(commands.Cog):
         channels: list[discord.TextChannel] = [
             ch
             for ch_id in DataCache.STANDUP_CHANNELS
-            if (ch := self.client.get_channel(ch_id))
+            if (ch := await self.client.fetch_channel(ch_id))
             and isinstance(ch, discord.TextChannel)
         ]
 

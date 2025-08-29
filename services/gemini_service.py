@@ -107,7 +107,7 @@ Your final output must contain ONLY the JSON object and nothing else. No introdu
         )
 
         response = client.models.generate_content(
-            model=model, contents=contents, config=generate_content_config
+            model=model, contents=contents, config=generate_content_config # type: ignore
         )
 
         response_text = (

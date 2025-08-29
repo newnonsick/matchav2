@@ -22,7 +22,19 @@ def remove_special_characters(string: str, allowed: str = "_") -> str:
 def make_name_safe(name: str) -> str:
     return convert_string_to_snake_case(remove_special_characters(name))
 
-
-def random_text(length=6):
+def random_text(length: int = 5, include_chars: list[str] | None = None) -> str:
     characters = string.ascii_uppercase + string.digits
-    return "".join(random.choice(characters) for _ in range(length))
+
+    if include_chars:
+        char_pool = list(set(characters + "".join(include_chars)))
+
+        result_list = random.choices(char_pool, k=length)
+
+        included_char_present = any(c in include_chars for c in result_list)
+        if not included_char_present:
+            result_list[random.randint(0, length - 1)] = random.choice(include_chars)
+
+        return "".join(result_list)
+    else:
+        return "".join(random.choice(characters) for _ in range(length))
+

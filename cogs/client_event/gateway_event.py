@@ -15,13 +15,13 @@ class GatewayEvents(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print("Gateway Events Cog is ready!")
+        await self.client.bot_panel_service.refresh_bot_panel(botAlive=True)
         await self.client.tree.sync()
         print("Synced application commands.")
         if not self.client.user:
             print("We are not logged in.")
             return
 
-        await self.client.bot_panel_service.refresh_bot_panel(botAlive=True)
         await self.client.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.watching, name="Botnoi Employees"

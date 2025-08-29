@@ -84,4 +84,4 @@ ENTRY_OFFICE_KEYWORDS = [
 ]  # Only lowercase keywords
 
 CLOCKIN_START_TIME = (8, 0)
-CLOCKIN_END_TIME = (10, 0)
+CLOCKIN_END_TIME = (18, 0)

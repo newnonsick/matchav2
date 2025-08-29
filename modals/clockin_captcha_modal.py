@@ -16,12 +16,14 @@ class ClockinCaptchaModal(discord.ui.Modal):
         author_id: int,
         captcha_text: str,
         clockin_time: datetime,
+        parent_view: discord.ui.View,
     ):
         super().__init__(title="Clock-in Captcha", timeout=300)
         self.client = client
         self.author_id = author_id
         self.captcha_text = captcha_text
         self.clockin_time = clockin_time
+        self.parent_view = parent_view
 
         self.captcha_input = discord.ui.TextInput(
             label="Enter the text shown in the image",
@@ -29,7 +31,7 @@ class ClockinCaptchaModal(discord.ui.Modal):
             placeholder="Type the captcha text here...",
             required=True,
             max_length=10,
-            min_length=4,
+            min_length=0,
         )
         self.add_item(self.captcha_input)
 
@@ -57,6 +59,8 @@ class ClockinCaptchaModal(discord.ui.Modal):
                 f"You have already clocked in today at {convert_to_bangkok(existing_clockin.clock_in_time).strftime('%d/%m/%Y %H:%M:%S')}.",
                 ephemeral=True,
             )
+
+            self.parent_view.stop()
             self.stop()
             return
 
@@ -69,4 +73,5 @@ class ClockinCaptchaModal(discord.ui.Modal):
             ephemeral=True,
         )
 
+        self.parent_view.stop()
         self.stop()

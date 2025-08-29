@@ -24,7 +24,7 @@ class BotPanelService:
     async def delete_bot_panel(self) -> None:
         bot_panel = await self.botPanelRepository.get_bot_panel()
         if bot_panel:
-            channel = self.client.get_channel(bot_panel.channel_id)
+            channel = await self.client.fetch_channel(bot_panel.channel_id)
             if channel and isinstance(channel, discord.TextChannel):
                 try:
                     message = await channel.fetch_message(bot_panel.message_id)
@@ -103,7 +103,7 @@ class BotPanelService:
             print("Bot panel does not exist. Cannot refresh.")
             return
 
-        channel = self.client.get_channel(bot_panel.channel_id)
+        channel = await self.client.fetch_channel(bot_panel.channel_id)
         if not channel or not isinstance(channel, discord.TextChannel):
             await self.delete_bot_panel()
             return

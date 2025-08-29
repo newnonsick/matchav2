@@ -156,7 +156,7 @@ class MessagesEvents(commands.Cog):
         ):
             return
 
-        channel = self.client.get_channel(channel_id)
+        channel = await self.client.fetch_channel(channel_id)
         if not channel:
             return
 
@@ -268,7 +268,7 @@ class MessagesEvents(commands.Cog):
         ):
             return
 
-        channel = self.client.get_channel(channel_id)
+        channel = await self.client.fetch_channel(channel_id)
         if not channel:
             return
 

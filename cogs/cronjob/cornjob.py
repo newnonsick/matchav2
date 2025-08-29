@@ -142,7 +142,7 @@ class DailySummarySchedulerCog(commands.Cog):
     #         return
 
     #     channel_id = DAILY_VOICE_ATTENDANCE_CHANNEL_ID
-    #     channel = self.client.get_channel(channel_id)
+    #     channel = await self.client.fetch_channel(channel_id)
     #     if channel and isinstance(channel, discord.TextChannel):
     #         await channel.send(f"📢 **Daily Voice Attendance Summary for {date}**")
     #         try:
@@ -164,36 +164,40 @@ class DailySummarySchedulerCog(commands.Cog):
     #             )
 
     async def send_leave(self):
-        date = get_date_now()
+        current_date = get_date_now()
 
-        if await self.client.company_service.is_holiday_date(date):
+        if await self.client.company_service.is_holiday_date(current_date):
             return
 
-        leaves = await self.client.leave_service.get_daily_leaves(date)
-        embed = await self.client.leave_service.get_daily_leaves_embed(leaves, date)
-        if date not in DataCache.daily_leave_summary:
+        leaves = await self.client.leave_service.get_daily_leaves(current_date)
+        embed = await self.client.leave_service.get_daily_leaves_embed(
+            leaves, current_date
+        )
+        if current_date not in DataCache.daily_leave_summary.keys():
             channel_id = LEAVE_SUMMARY_CHANNEL_ID
-            channel = self.client.get_channel(channel_id)
+            channel = await self.client.fetch_channel(channel_id)
             if channel and isinstance(channel, discord.TextChannel):
                 try:
                     message = await channel.send(embed=embed)
-                    DataCache.daily_leave_summary = {date: message}
+                    DataCache.daily_leave_summary = {current_date: message}
                 except discord.Forbidden:
                     print(f"Cannot send message to channel {channel_id}: Forbidden")
                 except Exception as e:
                     print(f"Error sending leave summary to channel {channel_id}: {e}")
         else:
-            message = DataCache.daily_leave_summary[date]
+            message = DataCache.daily_leave_summary[current_date]
             try:
                 await message.edit(embed=embed)
             except discord.NotFound:
-                print(f"Message for date {date} not found, sending new message.")
+                print(
+                    f"Message for date {current_date} not found, sending new message."
+                )
                 channel_id = LEAVE_SUMMARY_CHANNEL_ID
-                channel = self.client.get_channel(channel_id)
+                channel = await self.client.fetch_channel(channel_id)
                 if channel and isinstance(channel, discord.TextChannel):
                     try:
                         message = await channel.send(embed=embed)
-                        DataCache.daily_leave_summary[date] = message
+                        DataCache.daily_leave_summary[current_date] = message
                     except discord.Forbidden:
                         print(f"Cannot send message to channel {channel_id}: Forbidden")
                     except Exception as e:
@@ -214,7 +218,7 @@ class DailySummarySchedulerCog(commands.Cog):
         DELEY_SECONDS = 2
 
         async def process_channel(channel_id):
-            channel = self.client.get_channel(channel_id)
+            channel = await self.client.fetch_channel(channel_id)
             if channel and isinstance(channel, discord.TextChannel):
                 try:
                     userid_wrote_standup = await self.client.standup_service.get_userid_wrote_standup_by_date(
@@ -297,7 +301,7 @@ class DailySummarySchedulerCog(commands.Cog):
         )
         if date not in DataCache.daily_office_entry_summary:
             channel_id = OFFICE_ENTRY_SUMMARY_CHANNEL_ID
-            channel = self.client.get_channel(channel_id)
+            channel = await self.client.fetch_channel(channel_id)
             if channel and isinstance(channel, discord.TextChannel):
                 try:
                     message = await channel.send(embed=embed)
@@ -315,7 +319,7 @@ class DailySummarySchedulerCog(commands.Cog):
             except discord.NotFound:
                 print(f"Message for date {date} not found, sending new message.")
                 channel_id = OFFICE_ENTRY_SUMMARY_CHANNEL_ID
-                channel = self.client.get_channel(channel_id)
+                channel = await self.client.fetch_channel(channel_id)
                 if channel and isinstance(channel, discord.TextChannel):
                     try:
                         message = await channel.send(embed=embed)
