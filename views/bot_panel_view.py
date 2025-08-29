@@ -1,5 +1,6 @@
 import datetime
 from typing import TYPE_CHECKING
+import uuid
 
 import discord
 
@@ -25,7 +26,6 @@ class BotPanelView(discord.ui.View):
     @discord.ui.button(
         label="Clock In",
         style=discord.ButtonStyle.green,
-        custom_id="bot_panel:clock_in",
         emoji="🕒",
     )
     async def clock_in_button_callback(
@@ -33,10 +33,11 @@ class BotPanelView(discord.ui.View):
     ):
         clockin_time = get_datetime_now()
 
-        if clockin_time.time() < datetime.time(*CLOCKIN_START_TIME):
-            # ) or clockin_time.time() > datetime.time(*CLOCKIN_END_TIME):
+        if clockin_time.time() < datetime.time(
+            *CLOCKIN_START_TIME
+        ) or clockin_time.time() > datetime.time(*CLOCKIN_END_TIME):
             await interaction.response.send_message(
-                "Clock-in is only allowed between 08:00 and 10:00 AM. Please try again during this time window.",
+                "Clock-in is only allowed between 08:00 and 18:00 AM. Please try again during this time window.",
                 ephemeral=True,
             )
             return
@@ -52,11 +53,37 @@ class BotPanelView(discord.ui.View):
                 ephemeral=True,
             )
         else:
-            captcha_text = random_text(6)
+            captcha_text = random_text(3, include_chars=["1", "4"])
             captcha_image = await generate_captcha(captcha_text)
-            file = discord.File(captcha_image, filename="captcha.png")
+
+            if not captcha_image:
+                await interaction.response.send_message(
+                    "⚠️ Failed to generate captcha. Please try again later.",
+                    ephemeral=True,
+                )
+                return
+
+            filename = f"captcha_{uuid.uuid4().hex}.png"
+            file = discord.File(captcha_image, filename=filename)
+
+            now_unix = int(clockin_time.timestamp())
+            now_unix_plus_300 = now_unix + 300
+
+            embed = discord.Embed(
+                title="🔐 Clock-In Verification",
+                description=(
+                    "To complete your clock-in, please solve the captcha below.\n\n"
+                    f"⏳ You have **5 minutes** to respond (until <t:{now_unix_plus_300}:T>).\n\n"
+                    "✅ Enter the correct text shown in the image to confirm."
+                ),
+                color=discord.Color.blurple()
+            )
+
+            embed.set_image(url=f"attachment://{filename}")
+            embed.set_footer(text="Clock-In Security Check")
+
             await interaction.response.send_message(
-                "Please solve the captcha below to confirm your clock-in:",
+                embed=embed,
                 file=file,
                 ephemeral=True,
                 view=ClockinCaptchaView(
